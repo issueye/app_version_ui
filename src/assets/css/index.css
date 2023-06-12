@@ -145,10 +145,13 @@ html {
     --el-button-active-bg-color: #158bb8;
     --el-button-active-text-color: #fff;
     --el-button-active-border-color: #158bb8;
+
+    --el-button-disabled-bg-color: #3fa7d0;
+    --el-button-disabled-border-color: #3fa7d0;
 }
 
 .el-button {
-    --el-button-hover-text-color: #fff;
-    --el-button-hover-border-color: #5cb3cc;
+    --el-button-hover-text-color: #606266;
+    --el-button-hover-border-color: #95d8ea;
     --el-button-active-border-color: #158bb8;
 }
