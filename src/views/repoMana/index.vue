@@ -4,17 +4,16 @@
             <el-button type="primary" @click="addRepoClick">添加仓库</el-button>
         </div>
 
-        <el-table :data="tableData" border stripe style="width: 100%">
-            <el-table-column fixed prop="project_name" label="项目名称" width="150" />
+        <el-table :data="tableData" border height="600px" stripe style="width: 100%">
+            <el-table-column fixed prop="project_name" label="项目名称" width="300" />
             <el-table-column fixed prop="server_name" label="服务名称" width="300" />
-            <el-table-column prop="repo_url" label="仓库地址" width="300" />
-            <el-table-column prop="mark" label="备注" min-width="300" />
-            <el-table-column prop="create_at" label="创建时间" width="120" />
+            <el-table-column prop="repo_url" label="仓库地址" min-width="300" />
+            <el-table-column prop="create_at" label="创建时间" width="230" />
             <el-table-column fixed="right" label="操作" width="180">
                 <template #default="props">
-                    <el-button link type="primary" size="small" @click="handleClick">工作台</el-button>
+                    <el-button link type="primary" size="small" @click="handleClick(props.row)">工作台</el-button>
                     <el-button link type="primary" size="small" @click="editClick(props.row)">编辑</el-button>
-                    <el-button link type="primary" size="small">移除</el-button>
+                    <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -35,108 +34,157 @@
             </el-form>
 
             <div class="repo-dialog-footer-box">
-                <el-button type="primary" @click="repoDialogClick">确定</el-button>
+                <el-button type="primary" @click="repoSaveClick">确定</el-button>
                 <el-button @click="repoVisible = false">取消</el-button>
             </div>
         </div>
     </el-dialog>
 
-    <el-dialog class="workspaces-box" v-model="workspacesVisible" top="5px" :close-on-click-modal="false" title="工作台"
+    <el-dialog v-model="workspacesVisible" top="5px" :close-on-click-modal="false" title="工作台"
         width="80%" :before-close="handleClose">
-        <Workspaces />
+        <div class="workspaces-box">
+            <Workspaces :server_name="form.server_name" :project_id="form.id" :project_name="form.project_name" />
+        </div>
     </el-dialog>
 </template>
 
 <script setup name="repoMana">
 import { reactive, ref } from 'vue'
 import Workspaces from '../workspaces/index.vue'
+import { apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 const workspacesVisible = ref(false)
 const repoVisible = ref(false)
 const repoTitle = ref('添加仓库')
+const operationType = ref(0) // 0 添加 1 编辑
 
-const detailData = [
-    { name: 'main', version: 'v2.1', mark: '主分支' },
-    { name: 'main', version: 'v2.1', mark: '主分支' },
-    { name: 'main', version: 'v2.1', mark: '主分支' },
-    { name: 'main', version: 'v2.1', mark: '主分支' },
-]
 
 const form = reactive({
+    id: '',
     project_name: '',
     server_name: '',
     repo_url: '',
-    mark: '',
 })
 
-const tableData = [
-    {
-        project_name: '排队叫号',
-        server_name: 'LineServer',
-        repo_url: '',
-        head: 'main',
-        mark: '这是一个排队叫号后台服务',
-        create_at: '2016-05-03',
-    },
-    {
-        project_name: '排队叫号',
-        server_name: 'LineServer',
-        repo_url: '',
-        head: 'main',
-        mark: '这是一个排队叫号后台服务',
-        create_at: '2016-05-03',
-    },
-    {
-        project_name: '排队叫号',
-        server_name: 'LineServer',
-        repo_url: '',
-        head: 'main',
-        mark: '这是一个排队叫号后台服务',
-        create_at: '2016-05-03',
-    },
-    {
-        project_name: '排队叫号',
-        server_name: 'LineServer',
-        repo_url: '',
-        head: 'main',
-        mark: '这是一个排队叫号后台服务',
-        create_at: '2016-05-03',
-    },
-]
+const tableData = ref([])
 
 
-const handleClick = () => {
-    workspacesVisible.value = true
-}
-
-const editClick = (row) => {
-    console.log('row', row);
+// 工作台
+const handleClick = (row) => {
+    form.id = row.id
     form.project_name = row.project_name
     form.server_name = row.server_name
     form.repo_url = row.repo_url
-    form.mark = row.mark
 
+    workspacesVisible.value = true
+}
+
+// 获取仓库列表
+const getData = async () => {
+    let { data } = await apiRepoList()
+    console.log('getdata', data);
+    if (data.code == 200) {
+        tableData.value = data.data
+    }
+}
+
+// 打开获取仓库列表
+getData()
+
+// 移除仓库
+const removeRepoClick = async (row) => {
+    ElMessageBox.confirm(
+        '是否移除仓库',
+        '警告',
+        {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(async () => {
+
+        let { data } = await apiRepoDel(row.id)
+        if (data.code == 200) {
+            ElMessage({
+                type: 'success',
+                message: data.message,
+            })
+        }
+    }).finally(() => {
+        getData()
+    })
+}
+
+// 保存信息
+const repoSaveClick = async () => {
+    try {
+        if (operationType.value == 0) {
+            // 添加
+            let { data } = await apiRepoCreate(form)
+            if (data.code == 200) {
+                ElMessage({
+                    type: 'success',
+                    message: data.message,
+                })
+            }
+        } else {
+            // 修改
+            let { data } = await apiRepoModify(form)
+            if (data.code == 200) {
+                ElMessage({
+                    type: 'success',
+                    message: data.message,
+                })
+            }
+        }
+    } finally {
+        repoVisible.value = false
+        getData()
+    }
+}
+
+// 编辑仓库
+const editClick = (row) => {
+    form.project_name = row.project_name
+    form.server_name = row.server_name
+    form.repo_url = row.repo_url
+    form.id = row.id
     repoTitle.value = '修改仓库信息'
+
+    operationType.value = 1
     repoVisible.value = true
 }
 
+// 添加仓库
 const addRepoClick = () => {
+    form.project_name = ''
+    form.server_name = ''
+    form.repo_url = ''
+    form.mark = ''
+    form.id = ''
+
     repoTitle.value = '添加仓库'
+    operationType.value = 0
     repoVisible.value = true
 }
 
 </script>
 
 <style scoped>
-.header-button-box{
+.header-button-box {
     margin-bottom: 30px;
 }
 
-.repo-dialog-footer-box{
+.workspaces-box{
+    height: 73vh;
+}
+
+.repo-dialog-footer-box {
     text-align: end;
 }
 
-.repo-dialog-box{
+.repo-dialog-box {
     margin-right: 30px;
 }
 
