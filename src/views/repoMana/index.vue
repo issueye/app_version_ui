@@ -19,7 +19,7 @@
         </el-table>
     </div>
 
-    <el-dialog top="5px" v-model="repoVisible" :close-on-click-modal="false" :title="repoTitle">
+    <el-dialog top="5px" v-model="repoVisible" width="70%" :close-on-click-modal="false" :title="repoTitle">
         <div class="repo-dialog-box">
             <el-form :model="form" label-width="120px">
                 <el-form-item label="项目名称">
@@ -31,17 +31,22 @@
                 <el-form-item label="仓库地址">
                     <el-input v-model="form.repo_url" />
                 </el-form-item>
+                <el-form-item>
+                    <Codemirror class="code-mirror" height="500px" v-model:value="code" :options="cmOptions" border
+                        @change="onChange" @input="onInput" @ready="onReady" />
+                </el-form-item>
             </el-form>
 
             <div class="repo-dialog-footer-box">
+                <el-button type="primary" @click="insertTlClick">插入模板代码</el-button>
                 <el-button type="primary" @click="repoSaveClick">确定</el-button>
-                <el-button @click="repoVisible = false">取消</el-button>
+                <el-button @click="cancelClick">取消</el-button>
             </div>
         </div>
     </el-dialog>
 
-    <el-dialog v-model="workspacesVisible" top="5px" :close-on-click-modal="false" title="工作台"
-        width="80%" :before-close="handleClose">
+    <el-dialog v-model="workspacesVisible" top="5px" :close-on-click-modal="false" title="工作台" width="80%"
+        :before-close="handleClose">
         <div class="workspaces-box">
             <Workspaces :server_name="form.server_name" :project_id="form.id" :project_name="form.project_name" />
         </div>
@@ -49,26 +54,128 @@
 </template>
 
 <script setup name="repoMana">
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import Workspaces from '../workspaces/index.vue'
 import { apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import "codemirror/mode/javascript/javascript.js";
+import Codemirror from "codemirror-editor-vue3"
 
 const workspacesVisible = ref(false)
 const repoVisible = ref(false)
 const repoTitle = ref('添加仓库')
 const operationType = ref(0) // 0 添加 1 编辑
 
+// 代码
+const code = ref('')
+const cmOptions = {
+    mode: "text/javascript",
+    lineNumbers: true,
+    lineWrapping: true,
+}
 
 const form = reactive({
     id: '',
     project_name: '',
     server_name: '',
     repo_url: '',
+    code: ''
 })
 
 const tableData = ref([])
 
+
+// 代码编辑器
+const onChange = (val, cm) => {
+    console.log(val);
+    console.log(cm.getValue());
+}
+
+const onInput = (val) => {
+    console.log(val);
+};
+
+const onReady = (cm) => {
+    console.log(cm.focus());
+};
+
+let templateCode = `let config = {
+    // 环境变量
+    env: [
+        { name: 'CGO_ENABLED', value: 0 },
+        { name: 'GOPROXY', value: 'https://goproxy.cn' }
+    ],
+    // 编译类型
+    builder: {
+        // 平台
+        goosList: [
+            {
+                // windows 平台
+                name: "windows",
+                goarch: [ "amd64" ]
+            },
+            {
+                // linux 平台
+                name: "linux",
+                goarch: [ "amd64" ]
+            }
+        ],
+        // 输出路径
+        output: {
+            path: 'bin/'
+        }
+    },
+    ldflags: [
+        '-X github.com/issueye/version-mana/internal/initialize.AppName=Demo',
+        '-X github.com/issueye/version-mana/internal/initialize.Branch=BRANCH',
+        '-X github.com/issueye/version-mana/internal/initialize.Commit=COMMIT',
+        '-X github.com/issueye/version-mana/internal/initialize.Date=NOW',
+        '-X github.com/issueye/version-mana/internal/initialize.AppName=DESCRIPTION',
+        '-X github.com/issueye/version-mana/internal/initialize.Version=VERSION',
+    ],
+    main: {
+        path: 'main.go'
+    }
+}`
+
+onMounted(() => {
+    code.value = `
+
+
+
+
+ 
+
+
+
+`
+})
+
+// 插入模板代码
+const insertTlClick = () => {
+    ElMessageBox.confirm(
+        '是否插入模板代码，如果插入将替换代码',
+        '警告',
+        {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(() => {
+        code.value = templateCode
+    }).catch(() => {
+        ElMessage({
+            type: 'info',
+            message: '取消插入模板代码',
+        })
+    })
+}
+
+// 取消修改
+const cancelClick = () => {
+    code.value = ''
+    repoVisible.value = false
+}
 
 // 工作台
 const handleClick = (row) => {
@@ -83,7 +190,6 @@ const handleClick = (row) => {
 // 获取仓库列表
 const getData = async () => {
     let { data } = await apiRepoList()
-    console.log('getdata', data);
     if (data.code == 200) {
         tableData.value = data.data
     }
@@ -119,6 +225,8 @@ const removeRepoClick = async (row) => {
 // 保存信息
 const repoSaveClick = async () => {
     try {
+        form.code = code.value
+
         if (operationType.value == 0) {
             // 添加
             let { data } = await apiRepoCreate(form)
@@ -139,6 +247,7 @@ const repoSaveClick = async () => {
             }
         }
     } finally {
+        code.value = ''
         repoVisible.value = false
         getData()
     }
@@ -150,6 +259,7 @@ const editClick = (row) => {
     form.server_name = row.server_name
     form.repo_url = row.repo_url
     form.id = row.id
+    code.value = row.code
     repoTitle.value = '修改仓库信息'
 
     operationType.value = 1
@@ -176,8 +286,12 @@ const addRepoClick = () => {
     margin-bottom: 30px;
 }
 
-.workspaces-box{
-    height: 73vh;
+.code-mirror {
+    line-height: 170%;
+}
+
+.workspaces-box {
+    height: 680px;
 }
 
 .repo-dialog-footer-box {

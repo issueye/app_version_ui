@@ -52,10 +52,10 @@
 
                     <!-- 按钮 -->
                     <div class="button-group-box">
-                        <el-button type="primary" :disabled="!saveButtondisabled" @click="addVersionClick">添加版本</el-button>
+                        <el-button type="primary" :disabled="!saveButtonDisabled" @click="addVersionClick">添加版本</el-button>
 
-                        <el-button :disabled="saveButtondisabled" @click="cancelVersionClick">取消</el-button>
-                        <el-button type="primary" :disabled="saveButtondisabled"
+                        <el-button :disabled="saveButtonDisabled" @click="cancelVersionClick">取消</el-button>
+                        <el-button type="primary" :disabled="saveButtonDisabled"
                             @click="saveVersionDataClick">保存</el-button>
                     </div>
                 </div>
@@ -100,7 +100,8 @@
                         </el-col>
                     </el-row>
                     <div class="pagination-box">
-                        <el-pagination small background layout="prev, pager, next" :current-page="currentPage" :total="50" @current-change="currentChange" />
+                        <el-pagination small background layout="prev, pager, next" :current-page="currentPage" :total="50"
+                            @current-change="currentChange" />
                     </div>
                 </div>
             </el-col>
@@ -131,7 +132,7 @@ const workspacesProps = defineProps({
 })
 
 // 保存按钮状态
-const saveButtondisabled = ref(true);
+const saveButtonDisabled = ref(true);
 // 版本信息状态
 const versionInfoDisabled = ref(true);
 // 当前页码
@@ -193,7 +194,7 @@ const tableData = ref([]);
 
 // 行选中
 const rowClick = (row, event, column) => {
-    if (!saveButtondisabled.value) return;
+    if (!saveButtonDisabled.value) return;
 
     form.app_name = row.app_name;
     form.content = row.content;
@@ -219,7 +220,7 @@ const tagChange = (val) => {
 
 // 添加版本点击按钮
 const addVersionClick = () => {
-    saveButtondisabled.value = false;
+    saveButtonDisabled.value = false;
     versionInfoDisabled.value = false;
 
     form.app_name = ''
@@ -234,7 +235,7 @@ const addVersionClick = () => {
     watchForm = watch(
         () => [form.tag, form.version_x, form.version_y, form.version_z],
         (newValue, oldValue) => {
-            if (saveButtondisabled.value) return
+            if (saveButtonDisabled.value) return
 
             let version = `v${newValue[1]}.${newValue[2]}.${newValue[3]}.${dayjs().format('MMDD')}_${newValue[0]}`
             form.app_name = `${workspacesProps.server_name}_${version}`
@@ -310,7 +311,7 @@ const removeVersionClick = (row) => {
 // 取消
 const cancelVersionClick = () => {
     watchForm()
-    saveButtondisabled.value = true;
+    saveButtonDisabled.value = true;
     versionInfoDisabled.value = true;
     form.content = ''
     form.app_name = ''
@@ -342,7 +343,7 @@ const cancelVersionClick = () => {
     display: inline-block;
     width: 1px;
     position: relative;
-    height: 80%;
+    height: 90%;
     margin-left: 30px;
 }
 
