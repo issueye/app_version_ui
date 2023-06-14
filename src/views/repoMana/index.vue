@@ -54,7 +54,7 @@
 <script setup name="repoMana">
 import { reactive, ref, onMounted } from 'vue'
 import Workspaces from '../workspaces/index.vue'
-import { apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
+import { apiBranchList, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import "codemirror/mode/javascript/javascript.js";
 import Codemirror from "codemirror-editor-vue3"
@@ -151,8 +151,14 @@ onMounted(() => {
 })
 
 // 行选中
-const handleRowClick = (row, event, column) => {
+const handleRowClick = async (row, event, column) => {
     bus.$emit("mitt-repo-table-row-click", row)
+
+    // 获取分支信息
+    let { data } = await apiBranchList(row.id)
+    if (data.code == 200) {
+        bus.$emit('mitt-repo-branch', data.data)
+    }
 }
 
 // 插入模板代码
@@ -276,7 +282,6 @@ const addRepoClick = () => {
 </script>
 
 <style scoped>
-
 /* 添加仓库 */
 .header-button-box {
     margin-bottom: 10px;

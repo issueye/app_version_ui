@@ -35,6 +35,24 @@ export const apiRepoDel = (id) => {
     })
 }
 
+// 获取分支列表
+export const apiBranchList = (id) => {
+    return request({
+        url: `api/v1/repo/branch/${id}`,
+        method: 'get',
+    })
+}
+
+// 获取最后一次版本信息
+export const apiLastVerNum = (id, params) => {
+    return request({
+        url: `api/v1/repo/version/lastVerNum/${id}`,
+        method: 'get',
+        params: params
+    })
+}
+
+
 // 添加版本
 export const apiVersionCreate = (data) => {
     return request({

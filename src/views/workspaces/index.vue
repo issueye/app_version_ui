@@ -12,15 +12,15 @@
                     <el-col :span="5">
                         <el-form-item label="发布类型">
                             <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
-                                <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="5">
                         <el-form-item label="分支">
-                            <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
-                                <el-option v-for="item in options" :key="item.value" :label="item.label"
+                            <el-select v-model="detailForm.branch" placeholder="请选择分支" @change="branchChange">
+                                <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
                         </el-form-item>
@@ -51,7 +51,7 @@
     </div>
 
     <el-dialog :title="versionTitle" v-model="addVersionDialogVisible" :close-on-click-modal="false" top="5px"
-        @open="handlOpenDialogClick" width="40%">
+        @open="handleOpenDialogClick" width="40%">
         <div class="dialog-content-box">
             <el-form :model="form" label-width="80px">
                 <el-form-item label="程序名称">
@@ -72,14 +72,19 @@
                     <el-col :span="10">
                         <el-form-item label="发布类型">
                             <el-select v-model="form.tag" placeholder="请选择 tag">
-                                <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
                         </el-form-item>
                     </el-col>
                 </el-row>
 
-
+                <el-form-item label="分支">
+                    <el-select v-model="form.branch" placeholder="请选择分支" @change="branchDialogChange">
+                        <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
+                            :value="item.value" />
+                    </el-select>
+                </el-form-item>
                 <el-form-item label="提交hash">
                     <el-input disabled v-model="form.commit_hash" />
                 </el-form-item>
@@ -100,7 +105,7 @@
 <script setup name="workspaces">
 import { reactive, ref, watch, onMounted, onUnmounted } from "vue"
 import dayjs from 'dayjs'
-import { apiVersionCreate, apiVersionList, apiVersionRemove } from "../../api/repo";
+import { apiVersionCreate, apiVersionList, apiVersionRemove, apiLastVerNum } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
 import bus from "../../bus";
 
@@ -123,7 +128,7 @@ const repoInfo = reactive({
     repo_url: '',
 })
 
-const options = [
+const tagOptions = [
     {
         label: "alpha",
         value: "alpha",
@@ -142,12 +147,9 @@ const options = [
     }
 ];
 
-// 仓库表单信息
-const repoFrom = reactive({
-    id: '',
-    name: '',
-    branch: ''
-})
+const branchOptions = ref([])
+const branchData = ref([])
+
 
 var watchForm;
 
@@ -157,14 +159,15 @@ const form = reactive({
     tag: 'alpha',
     repo_id: '',
     version: '',
-    version_x: 0,
-    version_y: 0,
-    version_z: 0,
-    min_x: 0,
-    min_y: 0,
-    min_z: 0,
+    version_x: 1,
+    version_y: 1,
+    version_z: 1,
+    min_x: 1,
+    min_y: 1,
+    min_z: 1,
 })
 
+// 重置表单
 const resetForm = () => {
     form.app_name = ''
     form.tag = ''
@@ -177,7 +180,8 @@ const resetForm = () => {
 
 // 明细表单信息
 const detailForm = reactive({
-    tag: "alpha",
+    tag: 'alpha',
+    branch: '',
     pageNum: 1,
     pageSize: 10,
 })
@@ -192,6 +196,20 @@ onMounted(() => {
         repoInfo.repo_url = data.repo_url
 
         getData()
+    })
+
+    bus.$on('mitt-repo-branch', (data) => {
+        console.log('mitt-repo-branch => on', data)
+
+        branchData.value = data
+
+        branchOptions.value = []
+        data.forEach((item, index) => {
+            branchOptions.value.push({
+                label: item.short_name,
+                value: item.short_name,
+            })
+        })
     })
 })
 
@@ -236,7 +254,6 @@ const handleAddVersionClick = () => {
     }
 
     resetForm()
-
     addVersionDialogVisible.value = true
 }
 
@@ -246,17 +263,46 @@ const tagChange = (val) => {
     getData()
 }
 
+const branchChange = (val) => {
+    detailForm.branch = val
+    getData()
+}
+
+const branchDialogChange = async (val) => {
+    form.branch = val
+
+    // 处理提交 hash
+    branchData.value.find((item) => {
+        if (item.short_name == val) {
+            form.commit_hash = item.hash
+            return
+        }
+    })
+
+    let params = {
+        tag: form.tag,
+        branch: form.branch,
+    }
+    let { data } = await apiLastVerNum(repoInfo.project_id, params)
+    if (data.code == 200) {
+        form.min_x = data.data.version_x
+        form.min_y = data.data.version_y
+        form.min_z = data.data.version_z
+        form.version_x = data.data.version_x
+        form.version_y = data.data.version_y
+        form.version_z = data.data.version_z
+    }
+}
+
 // 添加版本点击按钮
-const handlOpenDialogClick = () => {
+const handleOpenDialogClick = () => {
     form.app_name = ''
     form.content = ''
     form.tag = 'alpha'
     form.branch = ''
     form.repo_id = repoInfo.project_id
-    form.commit_hash = '1111123'
-    form.branch = 'test_branch'
-
-    console.log('handlOpenDialogClick open');
+    form.commit_hash = ''
+    form.branch = ''
 
     // 监听表单内容是否发生了变化
     watchForm = watch(
@@ -274,7 +320,6 @@ const handlOpenDialogClick = () => {
 const getData = async () => {
     detailForm.pageNum = current.value
     let { data } = await apiVersionList(detailForm)
-    console.log('getdata', data);
     if (data.code == 200) {
         tableData.value = data.data
         total.value = data.pageInfo.total
@@ -312,7 +357,6 @@ const currentChange = (val) => {
 }
 
 const removeVersionClick = (row) => {
-    console.log('removeVersionClick', row);
     ElMessageBox.confirm(
         '是否移除版本',
         '警告',
@@ -369,7 +413,7 @@ const cancelVersionClick = () => {
     margin-bottom: 0px;
 }
 
-.dialog-content-box{
+.dialog-content-box {
     padding-right: 20px;
 }
 
