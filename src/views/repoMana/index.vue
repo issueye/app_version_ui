@@ -3,15 +3,13 @@
         <div class="header-button-box">
             <el-button type="primary" @click="addRepoClick">添加仓库</el-button>
         </div>
-
-        <el-table :data="tableData" border height="600px" stripe style="width: 100%">
-            <el-table-column fixed prop="project_name" label="项目名称" width="300" />
-            <el-table-column fixed prop="server_name" label="服务名称" width="300" />
+        <el-table :data="tableData" border height="80vh" stripe style="width: 100%" @row-click="handleRowClick">
+            <el-table-column fixed prop="project_name" label="项目名称" width="200" />
+            <el-table-column prop="server_name" label="服务名称" width="200" />
             <el-table-column prop="repo_url" label="仓库地址" min-width="300" />
             <el-table-column prop="create_at" label="创建时间" width="230" />
             <el-table-column fixed="right" label="操作" width="180">
                 <template #default="props">
-                    <el-button link type="primary" size="small" @click="handleClick(props.row)">工作台</el-button>
                     <el-button link type="primary" size="small" @click="editClick(props.row)">编辑</el-button>
                     <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                 </template>
@@ -19,9 +17,9 @@
         </el-table>
     </div>
 
-    <el-dialog top="5px" v-model="repoVisible" width="70%" :close-on-click-modal="false" :title="repoTitle">
+    <el-dialog top="5px" v-model="repoVisible" width="40%" :close-on-click-modal="false" :title="repoTitle">
         <div class="repo-dialog-box">
-            <el-form :model="form" label-width="120px">
+            <el-form :model="form" label-width="80px">
                 <el-form-item label="项目名称">
                     <el-input v-model="form.project_name" />
                 </el-form-item>
@@ -31,7 +29,7 @@
                 <el-form-item label="仓库地址">
                     <el-input v-model="form.repo_url" />
                 </el-form-item>
-                <el-form-item>
+                <el-form-item label="编译参数">
                     <Codemirror class="code-mirror" height="500px" v-model:value="code" :options="cmOptions" border
                         @change="onChange" @input="onInput" @ready="onReady" />
                 </el-form-item>
@@ -60,6 +58,7 @@ import { apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api
 import { ElMessage, ElMessageBox } from 'element-plus';
 import "codemirror/mode/javascript/javascript.js";
 import Codemirror from "codemirror-editor-vue3"
+import bus from '../../bus';
 
 const workspacesVisible = ref(false)
 const repoVisible = ref(false)
@@ -151,6 +150,11 @@ onMounted(() => {
 `
 })
 
+// 行选中
+const handleRowClick = (row, event, column) => {
+    bus.$emit("mitt-repo-table-row-click", row)
+}
+
 // 插入模板代码
 const insertTlClick = () => {
     ElMessageBox.confirm(
@@ -175,16 +179,6 @@ const insertTlClick = () => {
 const cancelClick = () => {
     code.value = ''
     repoVisible.value = false
-}
-
-// 工作台
-const handleClick = (row) => {
-    form.id = row.id
-    form.project_name = row.project_name
-    form.server_name = row.server_name
-    form.repo_url = row.repo_url
-
-    workspacesVisible.value = true
 }
 
 // 获取仓库列表
@@ -282,8 +276,23 @@ const addRepoClick = () => {
 </script>
 
 <style scoped>
+
+/* 添加仓库 */
 .header-button-box {
-    margin-bottom: 30px;
+    margin-bottom: 10px;
+    text-align: end;
+}
+
+/* 仓库信息 */
+.repo-info-box {
+    border: #DCDFE6 1px solid;
+    padding: 10px;
+}
+
+.divider-line {
+    width: 1px;
+    background: #DCDFE6;
+    margin-left: 30px;
 }
 
 .code-mirror {

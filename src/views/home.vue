@@ -3,10 +3,19 @@
         <el-container class="home-main">
             <el-header class="home-header">程序版本管理系统</el-header>
             <el-container>
-                <el-main>
-                    <div>
-                        <RepoMana />
-                    </div>
+                <el-main class="main-box">
+                    <el-row class="page-box">
+                        <el-col :span="10">
+                            <div class="repo-box">
+                                <RepoMana  />
+                            </div>
+                        </el-col>
+                        <el-col :span="14">
+                            <div class="workspaces-box">
+                                <Workspaces />
+                            </div>
+                        </el-col>
+                    </el-row>
                 </el-main>
             </el-container>
         </el-container>
@@ -17,37 +26,23 @@
 import { ref } from 'vue'
 
 import RepoMana from './repoMana/index.vue'
-
-const tabPosition = ref('top')
-const stepIndex = ref(0)
-const stepIndexActive = ref('0')
-
-
-const tabClick = (tab, event) => {
-    console.log(JSON.stringify(tab));
-    console.log('tab.paneName', typeof tab.paneName);
-    stepIndex.value = +tab.paneName
-    stepIndexActive.value = tab.paneName
-}
-
-// 下一步
-const nextStep = () => {
-    if (stepIndex.value == 3) return
-    stepIndex.value++
-    stepIndexActive.value = stepIndex.value.toString()
-
-    console.log('stepIndex.value', stepIndex.value, 'stepIndexActive.value', stepIndexActive.value);
-}
-
-const lastStep = () => {
-    if (stepIndex.value == 0) return
-    stepIndex.value--
-    stepIndexActive.value = stepIndex.value.toString()
-}
+import Workspaces from './workspaces/index.vue'
 
 </script>
 
 <style scoped>
+
+.repo-box{
+    padding: 10px;
+    height: 88vh;
+    border-right: 1px #DCDFE6 solid;
+}
+
+/* 版本管理 */
+.workspaces-box{
+    padding: 10px;
+}
+
 .home-warp {
     position: absolute;
     top: 0;
@@ -79,6 +74,10 @@ const lastStep = () => {
 
 .content-box-tab {
     height: 90%;
+}
+
+.page-box{
+    border: 1px #DCDFE6 solid;
 }
 
 .box-card-button {

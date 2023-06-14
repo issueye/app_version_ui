@@ -1,142 +1,127 @@
 <template>
     <div class="content-box">
         <div class="header-box">
-            <el-form :model="repoFrom" label-width="80px">
-                <el-row>
-                    <el-col :span="10">
-                        <el-form-item label="项目名称">
-                            <el-input disabled v-model="repoFrom.name" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="6">
-                        <el-form-item label="分支名称">
-                            <el-input v-model="repoFrom.branch" />
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="4" style="margin-left: 10px;">
-                        <el-button type="primary">打开仓库</el-button>
-                    </el-col>
-                </el-row>
-            </el-form>
+            <!-- <el-button type="primary">打开仓库</el-button> -->
+            <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
         </div>
         <el-divider class="header-divider" />
         <!-- 版本内容 -->
-        <el-row class="body-content-box">
-            <el-col :span="8">
-                <div class="version-body-box">
-                    <el-form :model="form" label-width="80px">
-                        <el-form-item label="程序名称">
-                            <el-input disabled v-model="form.app_name" />
-                        </el-form-item>
-                        <el-form-item label="tag">
-                            <el-select v-model="form.tag" :disabled="versionInfoDisabled" placeholder="请选择 tag">
+        <div class="content-detail-box">
+            <el-form :model="detailForm" label-width="75px">
+                <el-row>
+                    <el-col :span="5">
+                        <el-form-item label="发布类型">
+                            <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
                                 <el-option v-for="item in options" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
                         </el-form-item>
-                        <el-form-item label="版号">
-                            <el-input-number v-model="form.version_x" class="input-number-version"
-                                :disabled="versionInfoDisabled" :min="form.min_x" controls-position="right" />
-                            <el-input-number v-model="form.version_y" class="input-number-version"
-                                :disabled="versionInfoDisabled" :min="form.min_y" controls-position="right" />
-                            <el-input-number v-model="form.version_z" class="input-number-version"
-                                :disabled="versionInfoDisabled" :min="form.min_z" controls-position="right" />
+                    </el-col>
+                    <el-col :span="5">
+                        <el-form-item label="分支">
+                            <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
+                                <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                    :value="item.value" />
+                            </el-select>
                         </el-form-item>
-                        <el-form-item label="提交hash">
-                            <el-input disabled v-model="form.commit_hash" />
-                        </el-form-item>
-                        <el-form-item label="内容">
-                            <el-input type="textarea" :rows="15" v-model="form.content" :readonly="versionInfoDisabled" />
-                        </el-form-item>
-                    </el-form>
-
-                    <!-- 按钮 -->
-                    <div class="button-group-box">
-                        <el-button type="primary" :disabled="!saveButtonDisabled" @click="addVersionClick">添加版本</el-button>
-
-                        <el-button :disabled="saveButtonDisabled" @click="cancelVersionClick">取消</el-button>
-                        <el-button type="primary" :disabled="saveButtonDisabled"
-                            @click="saveVersionDataClick">保存</el-button>
-                    </div>
-                </div>
-            </el-col>
-            <!-- 竖向分割线 -->
-            <div class="divider-line" />
-            <!-- 明细表格 -->
-            <el-col :span="15">
-                <div class="content-detail-box">
-                    <el-form :model="detailForm" label-width="30px">
-                        <el-row>
-                            <el-col :span="20">
-                                <el-form-item>
-                                    <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
-                                        <el-option v-for="item in options" :key="item.value" :label="item.label"
-                                            :value="item.value" />
-                                    </el-select>
-                                </el-form-item>
-                            </el-col>
-                        </el-row>
-                    </el-form>
-                </div>
-                <div class="detail-table-box">
-                    <el-row>
-                        <el-col>
-                            <el-table :data="tableData" border stripe style="width: 100%" height="500px"
-                                @row-click="rowClick">
-                                <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
-                                <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
-                                <el-table-column prop="tag" label="TAG" width="120" />
-                                <el-table-column prop="create_at" label="创建时间" width="230" />
-                                <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
-                                <el-table-column prop="branch" label="分支" width="120" />
-                                <el-table-column prop="commit_hash" label="提交HASH" width="120" />
-                                <el-table-column fixed="right" label="操作" width="100">
-                                    <template #default="props">
-                                        <el-button link type="primary" size="small"
-                                            @click.native.stop="removeVersionClick(props.row)">移除</el-button>
-                                    </template>
-                                </el-table-column>
-                            </el-table>
-                        </el-col>
-                    </el-row>
-                    <div class="pagination-box">
-                        <el-pagination small background layout="prev, pager, next" :current-page="currentPage" :total="50"
-                            @current-change="currentChange" />
-                    </div>
-                </div>
-            </el-col>
-        </el-row>
+                    </el-col>
+                </el-row>
+            </el-form>
+        </div>
+        <!-- 明细表格 -->
+        <el-table :data="tableData" border stripe style="width: 100%" height="70vh" @row-click="rowClick">
+            <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
+            <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
+            <el-table-column prop="tag" label="TAG" width="120" />
+            <el-table-column prop="create_at" label="创建时间" width="230" />
+            <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
+            <el-table-column prop="branch" label="分支" width="120" />
+            <el-table-column prop="commit_hash" label="提交HASH" width="120" />
+            <el-table-column fixed="right" label="操作" width="100">
+                <template #default="props">
+                    <el-button link type="primary" size="small"
+                        @click.native.stop="removeVersionClick(props.row)">移除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div class="pagination-box">
+            <el-pagination small background layout="prev, pager, next" :current-page="current" :total="total"
+                @current-change="currentChange" />
+        </div>
     </div>
+
+    <el-dialog :title="versionTitle" v-model="addVersionDialogVisible" :close-on-click-modal="false" top="5px"
+        @open="handlOpenDialogClick" width="40%">
+        <div class="dialog-content-box">
+            <el-form :model="form" label-width="80px">
+                <el-form-item label="程序名称">
+                    <el-input disabled v-model="form.app_name" />
+                </el-form-item>
+
+                <el-row>
+                    <el-col :span="14">
+                        <el-form-item label="发布版号">
+                            <el-input-number v-model="form.version_x" class="input-number-version" :min="form.min_x"
+                                controls-position="right" />
+                            <el-input-number v-model="form.version_y" class="input-number-version" :min="form.min_y"
+                                controls-position="right" />
+                            <el-input-number v-model="form.version_z" class="input-number-version" :min="form.min_z"
+                                controls-position="right" />
+                        </el-form-item>
+                    </el-col>
+                    <el-col :span="10">
+                        <el-form-item label="发布类型">
+                            <el-select v-model="form.tag" placeholder="请选择 tag">
+                                <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                    :value="item.value" />
+                            </el-select>
+                        </el-form-item>
+                    </el-col>
+                </el-row>
+
+
+                <el-form-item label="提交hash">
+                    <el-input disabled v-model="form.commit_hash" />
+                </el-form-item>
+                <el-form-item label="发布内容">
+                    <el-input type="textarea" :rows="15" v-model="form.content" />
+                </el-form-item>
+            </el-form>
+
+            <!-- 按钮 -->
+            <div class="button-group-box">
+                <el-button type="primary" @click="saveVersionDataClick">保存</el-button>
+                <el-button @click="cancelVersionClick">取消</el-button>
+            </div>
+        </div>
+    </el-dialog>
 </template>
 
 <script setup name="workspaces">
-import { reactive, ref, watch } from "vue"
+import { reactive, ref, watch, onMounted, onUnmounted } from "vue"
 import dayjs from 'dayjs'
 import { apiVersionCreate, apiVersionList, apiVersionRemove } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
-
-// 定义属性
-const workspacesProps = defineProps({
-    server_name: {
-        type: String,
-        default: '',
-    },
-    project_name: {
-        type: String,
-        default: ''
-    },
-    project_id: {
-        type: Number,
-        default: 0,
-    }
-})
+import bus from "../../bus";
 
 // 保存按钮状态
 const saveButtonDisabled = ref(true);
-// 版本信息状态
-const versionInfoDisabled = ref(true);
-// 当前页码
-const currentPage = ref(1)
+// 添加版本弹窗
+const addVersionDialogVisible = ref(false);
+// 弹窗标题
+const versionTitle = ref('添加版本');
+
+// 分页信息
+const current = ref(1)
+const total = ref(0)
+
+// repo info
+const repoInfo = reactive({
+    project_name: '',
+    project_id: '',
+    server_name: '',
+    repo_url: '',
+})
 
 const options = [
     {
@@ -164,9 +149,6 @@ const repoFrom = reactive({
     branch: ''
 })
 
-repoFrom.id = workspacesProps.project_id
-repoFrom.name = workspacesProps.project_name
-
 var watchForm;
 
 // 版本表单信息
@@ -183,11 +165,40 @@ const form = reactive({
     min_z: 0,
 })
 
+const resetForm = () => {
+    form.app_name = ''
+    form.tag = ''
+    form.app_name = ''
+    form.content = ''
+    form.tag = 'alpha'
+    form.branch = ''
+    form.repo_id = repoInfo.project_id
+}
+
 // 明细表单信息
 const detailForm = reactive({
     tag: "alpha",
     pageNum: 1,
     pageSize: 10,
+})
+
+onMounted(() => {
+    bus.$on("mitt-repo-table-row-click", (data) => {
+        console.log("mitt-repo-table-row-click => on", data);
+
+        repoInfo.project_id = data.id
+        repoInfo.project_name = data.project_name
+        repoInfo.server_name = data.server_name
+        repoInfo.repo_url = data.repo_url
+
+        getData()
+    })
+})
+
+onUnmounted(() => {
+    bus.$off("mitt-repo-table-row-click", () => {
+        console.log("mitt-repo-table-row-click => off");
+    })
 })
 
 const tableData = ref([]);
@@ -212,6 +223,23 @@ const rowClick = (row, event, column) => {
     form.version_z = +data[2];
 };
 
+// 添加版本
+const handleAddVersionClick = () => {
+
+    // 没有选择中
+    if (repoInfo.project_id == '') {
+        ElMessage({
+            type: 'warning',
+            message: '请选择仓库',
+        })
+        return
+    }
+
+    resetForm()
+
+    addVersionDialogVisible.value = true
+}
+
 // tag 发生变化时
 const tagChange = (val) => {
     detailForm.tag = val
@@ -219,26 +247,23 @@ const tagChange = (val) => {
 }
 
 // 添加版本点击按钮
-const addVersionClick = () => {
-    saveButtonDisabled.value = false;
-    versionInfoDisabled.value = false;
-
+const handlOpenDialogClick = () => {
     form.app_name = ''
     form.content = ''
     form.tag = 'alpha'
     form.branch = ''
-    form.repo_id = workspacesProps.project_id
+    form.repo_id = repoInfo.project_id
     form.commit_hash = '1111123'
     form.branch = 'test_branch'
+
+    console.log('handlOpenDialogClick open');
 
     // 监听表单内容是否发生了变化
     watchForm = watch(
         () => [form.tag, form.version_x, form.version_y, form.version_z],
         (newValue, oldValue) => {
-            if (saveButtonDisabled.value) return
-
             let version = `v${newValue[1]}.${newValue[2]}.${newValue[3]}.${dayjs().format('MMDD')}_${newValue[0]}`
-            form.app_name = `${workspacesProps.server_name}_${version}`
+            form.app_name = `${repoInfo.server_name}_${version}`
             form.version = version
         },
         { immediate: true }
@@ -247,10 +272,12 @@ const addVersionClick = () => {
 
 // 获取版本列表
 const getData = async () => {
+    detailForm.pageNum = current.value
     let { data } = await apiVersionList(detailForm)
-    console.log('getdate', data);
+    console.log('getdata', data);
     if (data.code == 200) {
         tableData.value = data.data
+        total.value = data.pageInfo.total
     }
 }
 
@@ -280,8 +307,7 @@ const saveVersionDataClick = async () => {
 
 // 分页
 const currentChange = (val) => {
-    currentPage.value = val
-    detailForm.pageNum = currentPage.value
+    current.value = val
     getData()
 }
 
@@ -311,8 +337,6 @@ const removeVersionClick = (row) => {
 // 取消
 const cancelVersionClick = () => {
     watchForm()
-    saveButtonDisabled.value = true;
-    versionInfoDisabled.value = true;
     form.content = ''
     form.app_name = ''
     form.min_x = 0
@@ -321,10 +345,16 @@ const cancelVersionClick = () => {
     form.version_x = 0
     form.version_y = 0
     form.version_z = 0
+
+    addVersionDialogVisible.value = false
 };
 </script>
 
 <style scoped>
+.header-box {
+    text-align: end;
+}
+
 .input-number-version {
     margin-right: 2px;
     width: 85px;
@@ -339,21 +369,15 @@ const cancelVersionClick = () => {
     margin-bottom: 0px;
 }
 
+.dialog-content-box{
+    padding-right: 20px;
+}
+
 .el-divider--vertical {
     display: inline-block;
     width: 1px;
     position: relative;
     height: 90%;
-    margin-left: 30px;
-}
-
-.version-body-box {
-    margin-top: 30px;
-}
-
-.divider-line {
-    width: 1px;
-    background: #DCDFE6;
     margin-left: 30px;
 }
 
@@ -365,10 +389,5 @@ const cancelVersionClick = () => {
     /* margin-left: 20px; */
     text-align: end;
     margin-top: 27px;
-}
-
-.detail-table-box {
-    margin-left: 30px;
-    /* margin-right: 70px; */
 }
 </style>
