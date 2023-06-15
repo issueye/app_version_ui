@@ -27,6 +27,24 @@ export const apiRepoModify = (data) => {
     })
 }
 
+// 修改代码
+export const apiRepoModifyCode = (data) => {
+    return request({
+        url: 'api/v1/repo/code',
+        method: 'put',
+        data: data,
+    })
+}
+
+// 修改代码
+export const apiRepoTestRun = (data) => {
+    return request({
+        url: 'api/v1/repo/testRun',
+        method: 'put',
+        data: data,
+    })
+}
+
 // 删除
 export const apiRepoDel = (id) => {
     return request({
@@ -76,5 +94,13 @@ export const apiVersionRemove = (id) => {
     return request({
         url: `api/v1/repo/version/${id}`,
         method: 'delete',
+    })
+}
+
+// 编译版本
+export const apiVersionBuild = (id) => {
+    return request({
+        url: `api/v1/repo/version/build/${id}`,
+        method: 'get',
     })
 }

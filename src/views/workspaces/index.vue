@@ -19,7 +19,8 @@
                     </el-col>
                     <el-col :span="5">
                         <el-form-item label="分支">
-                            <el-select v-model="detailForm.branch" placeholder="请选择分支" @change="branchChange">
+                            <el-select v-model="detailForm.branch" :clearable="true" placeholder="请选择分支"
+                                @change="branchChange">
                                 <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
@@ -29,18 +30,19 @@
             </el-form>
         </div>
         <!-- 明细表格 -->
-        <el-table :data="tableData" border stripe style="width: 100%" height="70vh" @row-click="rowClick">
+        <el-table :data="tableData" border stripe style="width: 100%" height="70vh">
             <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
             <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
             <el-table-column prop="tag" label="TAG" width="120" />
             <el-table-column prop="create_at" label="创建时间" width="230" />
             <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
-            <el-table-column prop="branch" label="分支" width="120" />
-            <el-table-column prop="commit_hash" label="提交HASH" width="120" />
-            <el-table-column fixed="right" label="操作" width="100">
+            <el-table-column prop="branch" label="分支" width="150" show-overflow-tooltip />
+            <el-table-column prop="commit_hash" label="提交HASH" width="300" show-overflow-tooltip />
+            <el-table-column fixed="right" label="操作" width="150" align="center">
                 <template #default="props">
-                    <el-button link type="primary" size="small"
-                        @click.native.stop="removeVersionClick(props.row)">移除</el-button>
+                    <el-button link type="primary" size="small" @click="removeVersionClick(props.row)">移除</el-button>
+                    <el-button link type="primary" size="small" @click="viewInfoClick(props.row)">查看</el-button>
+                    <el-button link type="primary" size="small" @click="appInfoClick(props.row)">程序</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -50,7 +52,7 @@
         </div>
     </div>
 
-    <el-dialog :title="versionTitle" v-model="addVersionDialogVisible" :close-on-click-modal="false" top="5px"
+    <el-dialog :title="versionTitle" v-model="versionDialogVisible" :close-on-click-modal="false" top="5px"
         @open="handleOpenDialogClick" width="40%">
         <div class="dialog-content-box">
             <el-form :model="form" label-width="80px">
@@ -61,17 +63,17 @@
                 <el-row>
                     <el-col :span="14">
                         <el-form-item label="发布版号">
-                            <el-input-number v-model="form.version_x" class="input-number-version" :min="form.min_x"
-                                controls-position="right" />
-                            <el-input-number v-model="form.version_y" class="input-number-version" :min="form.min_y"
-                                controls-position="right" />
-                            <el-input-number v-model="form.version_z" class="input-number-version" :min="form.min_z"
-                                controls-position="right" />
+                            <el-input-number :disabled="versionDialogType == 1" v-model="form.version_x"
+                                class="input-number-version" :min="form.min_x" controls-position="right" />
+                            <el-input-number :disabled="versionDialogType == 1" v-model="form.version_y"
+                                class="input-number-version" :min="form.min_y" controls-position="right" />
+                            <el-input-number :disabled="versionDialogType == 1" v-model="form.version_z"
+                                class="input-number-version" :min="form.min_z" controls-position="right" />
                         </el-form-item>
                     </el-col>
                     <el-col :span="10">
                         <el-form-item label="发布类型">
-                            <el-select v-model="form.tag" placeholder="请选择 tag">
+                            <el-select :disabled="versionDialogType == 1" v-model="form.tag" placeholder="请选择 tag">
                                 <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
@@ -80,7 +82,8 @@
                 </el-row>
 
                 <el-form-item label="分支">
-                    <el-select v-model="form.branch" placeholder="请选择分支" @change="branchDialogChange">
+                    <el-select :disabled="versionDialogType == 1" v-model="form.branch" placeholder="请选择分支"
+                        @change="branchDialogChange">
                         <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
                             :value="item.value" />
                     </el-select>
@@ -89,7 +92,7 @@
                     <el-input disabled v-model="form.commit_hash" />
                 </el-form-item>
                 <el-form-item label="发布内容">
-                    <el-input type="textarea" :rows="15" v-model="form.content" />
+                    <el-input type="textarea" :rows="15" v-model="form.content" :readonly="versionDialogType == 1" />
                 </el-form-item>
             </el-form>
 
@@ -100,21 +103,45 @@
             </div>
         </div>
     </el-dialog>
+    <el-dialog title="程序" v-model="appDialogVisible" :close-on-click-modal="false" top="5px" @open="openAppDialog">
+        <div class="app-button-group-box">
+            <el-button type="primary" @click="compileAppClick">编译</el-button>
+            <el-button @click="downloadAppClick">下载</el-button>
+        </div>
+        <div class="code-box">
+            <Codemirror class="code-mirror" height="500px" v-model:value="code" :options="cmOptions" border :KeepCursorInEnd="true"
+                        @change="onChange" @input="onInput" @ready="onReady" />
+        </div>
+    </el-dialog>
 </template>
 
 <script setup name="workspaces">
 import { reactive, ref, watch, onMounted, onUnmounted } from "vue"
 import dayjs from 'dayjs'
-import { apiVersionCreate, apiVersionList, apiVersionRemove, apiLastVerNum } from "../../api/repo";
+import { apiVersionCreate, apiVersionList, apiVersionRemove, apiLastVerNum, apiVersionBuild } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
 import bus from "../../bus";
+import "codemirror/mode/javascript/javascript.js";
+import Codemirror, { createTitle, createLogMark, createLog } from "codemirror-editor-vue3"
 
-// 保存按钮状态
-const saveButtonDisabled = ref(true);
-// 添加版本弹窗
-const addVersionDialogVisible = ref(false);
+// 添加版本弹窗  addVersionDialogVisible
+const versionDialogVisible = ref(false);
 // 弹窗标题
 const versionTitle = ref('添加版本');
+// 当前弹窗类型 0 添加版本 1 查看版本信息
+const versionDialogType = ref(0)
+
+// 程序
+const appDialogVisible = ref(false)
+
+// 代码
+const code = ref('')
+const cmOptions = {
+    mode: "cflog",
+    lineNumbers: true,
+    lineWrapping: true,
+    readOnly: true,
+}
 
 // 分页信息
 const current = ref(1)
@@ -156,20 +183,25 @@ var watchForm;
 // 版本表单信息
 const form = reactive({
     app_name: '',
+    commit_hash: '',
     tag: 'alpha',
     repo_id: '',
     version: '',
-    version_x: 1,
+    version_x: 0,
     version_y: 1,
     version_z: 1,
-    min_x: 1,
+    min_x: 0,
     min_y: 1,
     min_z: 1,
 })
 
+// 版本id
+const versionId  = ref('')
+
 // 重置表单
 const resetForm = () => {
     form.app_name = ''
+    form.commit_hash = ''
     form.tag = ''
     form.app_name = ''
     form.content = ''
@@ -187,6 +219,19 @@ const detailForm = reactive({
 })
 
 onMounted(() => {
+    code.value =
+`
+
+
+
+
+
+
+
+
+`
+    // ${createTitle('程序编译记录信息 ' + dayjs().format('YYYY-MM-DD HH:mm:ss'))}
+
     bus.$on("mitt-repo-table-row-click", (data) => {
         console.log("mitt-repo-table-row-click => on", data);
 
@@ -221,28 +266,10 @@ onUnmounted(() => {
 
 const tableData = ref([]);
 
-// 行选中
-const rowClick = (row, event, column) => {
-    if (!saveButtonDisabled.value) return;
-
-    form.app_name = row.app_name;
-    form.content = row.content;
-    form.tag = row.tag;
-    form.branch = row.branch;
-    let v = row.version;
-    v = v.substring(1);
-    let data = v.split(".");
-    form.min_x = +data[0];
-    form.min_y = +data[1];
-    form.min_z = +data[2];
-
-    form.version_x = +data[0];
-    form.version_y = +data[1];
-    form.version_z = +data[2];
-};
-
 // 添加版本
 const handleAddVersionClick = () => {
+    // 弹窗类型 0 添加
+    versionDialogType.value = 0
 
     // 没有选择中
     if (repoInfo.project_id == '') {
@@ -254,7 +281,9 @@ const handleAddVersionClick = () => {
     }
 
     resetForm()
-    addVersionDialogVisible.value = true
+
+    versionTitle.value = '添加版本'
+    versionDialogVisible.value = true
 }
 
 // tag 发生变化时
@@ -285,17 +314,38 @@ const branchDialogChange = async (val) => {
     }
     let { data } = await apiLastVerNum(repoInfo.project_id, params)
     if (data.code == 200) {
+
+        let version_y = data.data.version_y == 0 ? 1 : data.data.version_y
+
         form.min_x = data.data.version_x
-        form.min_y = data.data.version_y
-        form.min_z = data.data.version_z
+        form.min_y = version_y
+        form.min_z = data.data.version_z + 1
         form.version_x = data.data.version_x
-        form.version_y = data.data.version_y
-        form.version_z = data.data.version_z
+        form.version_y = version_y
+        form.version_z = data.data.version_z + 1
     }
+}
+
+// 打开程序弹窗
+const openAppDialog = () => {
+    code.value = `${createTitle('程序记录信息 ' + dayjs().format('YYYY-MM-DD HH:mm:ss'))}`
+}
+
+// 编译程序
+const compileAppClick = async() => {
+    let { data } = await apiVersionBuild(versionId.value)
+}
+
+// 下载程序
+const downloadAppClick = () => {
+
 }
 
 // 添加版本点击按钮
 const handleOpenDialogClick = () => {
+    // 如果当前是查看版本信息则不处理
+    if (versionDialogType.value == 1) return
+
     form.app_name = ''
     form.content = ''
     form.tag = 'alpha'
@@ -356,6 +406,7 @@ const currentChange = (val) => {
     getData()
 }
 
+// 移除版本
 const removeVersionClick = (row) => {
     ElMessageBox.confirm(
         '是否移除版本',
@@ -378,19 +429,48 @@ const removeVersionClick = (row) => {
     })
 }
 
+// 弹窗程序
+const appInfoClick = (row) => {
+    versionId.value = row.id
+    appDialogVisible.value = true
+}
+
+// 查看版本信息
+const viewInfoClick = (row) => {
+    // 弹窗类型 1 查看版本信息
+    versionDialogType.value = 1
+
+    console.log('viewInfoClick', row);
+
+    form.app_name = row.app_name;
+    form.content = row.content;
+    form.tag = row.tag;
+    form.branch = row.branch;
+    form.commit_hash = row.commit_hash
+    let v = row.version;
+    v = v.substring(1);
+    let data = v.split(".");
+    form.min_x = +data[0];
+    form.min_y = +data[1];
+    form.min_z = +data[2];
+
+    form.version_x = +data[0];
+    form.version_y = +data[1];
+    form.version_z = +data[2];
+
+    versionTitle.value = '版本信息'
+    versionDialogVisible.value = true
+}
+
 // 取消
 const cancelVersionClick = () => {
-    watchForm()
-    form.content = ''
-    form.app_name = ''
-    form.min_x = 0
-    form.min_y = 0
-    form.min_z = 0
-    form.version_x = 0
-    form.version_y = 0
-    form.version_z = 0
+    resetForm()
+    // 添加版本时，去除监听
+    if (versionDialogType.value == 0) {
+        watchForm()
+    }
 
-    addVersionDialogVisible.value = false
+    versionDialogVisible.value = false
 };
 </script>
 
@@ -434,4 +514,12 @@ const cancelVersionClick = () => {
     text-align: end;
     margin-top: 27px;
 }
+
+.code-box {
+    margin-top: 10px;
+}
+.app-button-group-box{
+    text-align: end;
+}
+
 </style>

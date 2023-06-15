@@ -6,18 +6,38 @@
         <el-table :data="tableData" border height="80vh" stripe style="width: 100%" @row-click="handleRowClick">
             <el-table-column fixed prop="project_name" label="项目名称" width="200" />
             <el-table-column prop="server_name" label="服务名称" width="200" />
-            <el-table-column prop="repo_url" label="仓库地址" min-width="300" />
+            <el-table-column prop="repo_url" label="仓库地址" min-width="300" show-overflow-tooltip />
             <el-table-column prop="create_at" label="创建时间" width="230" />
-            <el-table-column fixed="right" label="操作" width="180">
+            <el-table-column fixed="right" label="操作" align="center" width="180">
                 <template #default="props">
-                    <el-button link type="primary" size="small" @click="editClick(props.row)">编辑</el-button>
+                    <el-button link type="primary" size="small" @click.native.close="editClick(props.row)">编辑</el-button>
+                    <el-button link type="primary" size="small"
+                        @click.native.close="editCodeClick(props.row)">编辑脚本</el-button>
                     <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                 </template>
             </el-table-column>
         </el-table>
     </div>
 
-    <el-dialog top="5px" v-model="repoVisible" width="40%" :close-on-click-modal="false" :title="repoTitle">
+    <el-dialog title="编辑代码" v-model="codeVisible" fullscreen>
+        <div class="app-button-group-box">
+            <el-button @click="testRunClick">测试运行</el-button>
+            <el-button type="primary" @click="saveCodeClick">保存</el-button>
+        </div>
+        <el-row>
+            <el-col :span="16">
+                <Codemirror class="code-mirror" height="85vh" v-model:value="code" :options="cmOptions" border
+                    @change="onChange" @input="onInput" @ready="onReady" />
+            </el-col>
+            <el-col :span="8">
+                <Codemirror class="code-mirror" height="85vh" v-model:value="logInfo" :options="logOptions" border
+                    @change="onChange" @input="onInput" @ready="onReady" />
+            </el-col>
+        </el-row>
+    </el-dialog>
+
+    <el-dialog top="5px" v-model="repoVisible" width="40%" :close-on-click-modal="false" :title="repoTitle"
+        @open="openDialog">
         <div class="repo-dialog-box">
             <el-form :model="form" label-width="80px">
                 <el-form-item label="项目名称">
@@ -42,33 +62,33 @@
             </div>
         </div>
     </el-dialog>
-
-    <el-dialog v-model="workspacesVisible" top="5px" :close-on-click-modal="false" title="工作台" width="80%"
-        :before-close="handleClose">
-        <div class="workspaces-box">
-            <Workspaces :server_name="form.server_name" :project_id="form.id" :project_name="form.project_name" />
-        </div>
-    </el-dialog>
 </template>
 
 <script setup name="repoMana">
 import { reactive, ref, onMounted } from 'vue'
-import Workspaces from '../workspaces/index.vue'
-import { apiBranchList, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
+import { apiBranchList, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify, apiRepoModifyCode, apiRepoTestRun } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import "codemirror/mode/javascript/javascript.js";
 import Codemirror from "codemirror-editor-vue3"
 import bus from '../../bus';
 
-const workspacesVisible = ref(false)
 const repoVisible = ref(false)
 const repoTitle = ref('添加仓库')
 const operationType = ref(0) // 0 添加 1 编辑
+const codeVisible = ref(false)
 
 // 代码
 const code = ref('')
 const cmOptions = {
     mode: "text/javascript",
+    lineNumbers: true,
+    lineWrapping: true,
+}
+
+// 日志
+const logInfo = ref('')
+const logOptions = {
+    mode: 'cflog',
     lineNumbers: true,
     lineWrapping: true,
 }
@@ -137,17 +157,62 @@ let templateCode = `let config = {
     }
 }`
 
+// 测试运行
+const testRunClick = async() => {
+    let codeData = {
+        id: form.id,
+        code: code.value
+    }
+    let { data } = await apiRepoTestRun(codeData)
+    if (data.code == 200) {
+        ElMessage({
+            type: 'success',
+            message: data.message,
+        })
+    } else {
+        ElMessage({
+            type: 'error',
+            message: data.message
+        })
+    }
+}
+
+// 保存代码
+const saveCodeClick = async () => {
+    let codeData = {
+        id: form.id,
+        code: code.value
+    }
+    let { data } = await apiRepoModifyCode(codeData)
+    if (data.code == 200) {
+        ElMessage({
+            type: 'success',
+            message: data.message,
+        })
+    } else {
+        ElMessage({
+            type: 'error',
+            message: data.message
+        })
+    }
+}
+
 onMounted(() => {
-    code.value = `
+    let value =
+        `
 
 
 
 
- 
+
 
 
 
 `
+
+
+    code.value = value
+    logInfo.value = value
 })
 
 // 行选中
@@ -159,6 +224,11 @@ const handleRowClick = async (row, event, column) => {
     if (data.code == 200) {
         bus.$emit('mitt-repo-branch', data.data)
     }
+}
+
+// 打开窗口
+const openDialog = () => {
+    // code.value = ''
 }
 
 // 插入模板代码
@@ -253,6 +323,14 @@ const repoSaveClick = async () => {
     }
 }
 
+// 编辑代码
+const editCodeClick = (row) => {
+    code.value = row.code
+    form.id = row.id
+    form.code = row.code
+    codeVisible.value = true
+}
+
 // 编辑仓库
 const editClick = (row) => {
     form.project_name = row.project_name
@@ -298,6 +376,11 @@ const addRepoClick = () => {
     width: 1px;
     background: #DCDFE6;
     margin-left: 30px;
+}
+
+.app-button-group-box {
+    text-align: end;
+    margin-bottom: 10px;
 }
 
 .code-mirror {
