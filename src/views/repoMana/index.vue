@@ -19,7 +19,7 @@
         </el-table>
     </div>
 
-    <el-dialog title="编辑代码" v-model="codeVisible" fullscreen>
+    <el-dialog title="编辑代码" v-model="codeVisible" fullscreen @open="editCodeOpen" @close="editCodeClose">
         <div class="app-button-group-box">
             <el-button @click="testRunClick">测试运行</el-button>
             <el-button type="primary" @click="saveCodeClick">保存</el-button>
@@ -69,7 +69,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { apiBranchList, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify, apiRepoModifyCode, apiRepoTestRun } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import "codemirror/mode/javascript/javascript.js";
-import Codemirror from "codemirror-editor-vue3"
+import Codemirror, { createTitle, createLog } from "codemirror-editor-vue3"
 import bus from '../../bus';
 
 const repoVisible = ref(false)
@@ -84,6 +84,9 @@ const cmOptions = {
     lineNumbers: true,
     lineWrapping: true,
 }
+
+// websocket 对象
+var ws;
 
 // 日志
 const logInfo = ref('')
@@ -158,7 +161,7 @@ let templateCode = `let config = {
 }`
 
 // 测试运行
-const testRunClick = async() => {
+const testRunClick = async () => {
     let codeData = {
         id: form.id,
         code: code.value
@@ -229,6 +232,22 @@ const handleRowClick = async (row, event, column) => {
 // 打开窗口
 const openDialog = () => {
     // code.value = ''
+}
+
+// 编辑代码弹窗打开
+const editCodeOpen = () => {
+    let url = `ws://127.0.0.1:10061/api/v1/repo/ws/${form.id}`
+    console.log(url);
+    ws = new WebSocket(url)
+    ws.onmessage = (data) => {
+        console.log('data', data);
+        logInfo.value += `${createLog(data.data + '\n', 'info')}`
+    }
+}
+
+// 编辑代码弹窗关闭
+const editCodeClose = () => {
+    ws.close()
 }
 
 // 插入模板代码
