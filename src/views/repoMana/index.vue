@@ -3,6 +3,8 @@
         <div class="header-button-box">
             <el-button type="primary" @click="addRepoClick">添加仓库</el-button>
         </div>
+
+        <!-- 表格数据 -->
         <el-table :data="tableData" border height="80vh" stripe style="width: 100%" @row-click="handleRowClick">
             <el-table-column fixed prop="project_name" label="项目名称" width="200" />
             <el-table-column prop="server_name" label="服务名称" width="200" />
@@ -19,23 +21,25 @@
         </el-table>
     </div>
 
+    <!-- 编辑运行脚本 -->
     <el-dialog title="编辑代码" v-model="codeVisible" fullscreen @open="editCodeOpen" @close="editCodeClose">
         <div class="app-button-group-box">
             <el-button @click="testRunClick">测试运行</el-button>
             <el-button type="primary" @click="saveCodeClick">保存</el-button>
         </div>
         <el-row>
-            <el-col :span="16">
-                <Codemirror class="code-mirror" height="85vh" v-model:value="code" :options="cmOptions" border
+            <el-col :span="14">
+                <Codemirror class="code-mirror" height="85vh" v-model:value="code" ref="cmRef" :options="cmOptions" border
                     @change="onChange" @input="onInput" @ready="onReady" />
             </el-col>
-            <el-col :span="8">
-                <Codemirror class="code-mirror" height="85vh" v-model:value="logInfo" :options="logOptions" border
+            <el-col :span="10">
+                <Codemirror class="code-mirror" height="85vh" v-model:value="logInfo" ref="logcmRef" :options="logOptions" border
                     @change="onChange" @input="onInput" @ready="onReady" />
             </el-col>
         </el-row>
     </el-dialog>
 
+    <!-- 添加编辑仓库信息 -->
     <el-dialog top="5px" v-model="repoVisible" width="40%" :close-on-click-modal="false" :title="repoTitle"
         @open="openDialog">
         <div class="repo-dialog-box">
@@ -49,14 +53,8 @@
                 <el-form-item label="仓库地址">
                     <el-input v-model="form.repo_url" />
                 </el-form-item>
-                <el-form-item label="编译参数">
-                    <Codemirror class="code-mirror" height="500px" v-model:value="code" :options="cmOptions" border
-                        @change="onChange" @input="onInput" @ready="onReady" />
-                </el-form-item>
             </el-form>
-
             <div class="repo-dialog-footer-box">
-                <el-button type="primary" @click="insertTlClick">插入模板代码</el-button>
                 <el-button type="primary" @click="repoSaveClick">确定</el-button>
                 <el-button @click="cancelClick">取消</el-button>
             </div>
@@ -65,11 +63,13 @@
 </template>
 
 <script setup name="repoMana">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { apiBranchList, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify, apiRepoModifyCode, apiRepoTestRun } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import "codemirror/mode/javascript/javascript.js";
-import Codemirror, { createTitle, createLog } from "codemirror-editor-vue3"
+import "codemirror/theme/idea.css";
+import "codemirror/addon/hint/show-hint.css";
+import Codemirror from "codemirror-editor-vue3"
 import bus from '../../bus';
 
 const repoVisible = ref(false)
@@ -87,6 +87,9 @@ const cmOptions = {
 
 // websocket 对象
 var ws;
+
+const cmRef = ref('')
+const logcmRef = ref('')
 
 // 日志
 const logInfo = ref('')
@@ -120,45 +123,6 @@ const onInput = (val) => {
 const onReady = (cm) => {
     console.log(cm.focus());
 };
-
-let templateCode = `let config = {
-    // 环境变量
-    env: [
-        { name: 'CGO_ENABLED', value: 0 },
-        { name: 'GOPROXY', value: 'https://goproxy.cn' }
-    ],
-    // 编译类型
-    builder: {
-        // 平台
-        goosList: [
-            {
-                // windows 平台
-                name: "windows",
-                goarch: [ "amd64" ]
-            },
-            {
-                // linux 平台
-                name: "linux",
-                goarch: [ "amd64" ]
-            }
-        ],
-        // 输出路径
-        output: {
-            path: 'bin/'
-        }
-    },
-    ldflags: [
-        '-X github.com/issueye/version-mana/internal/initialize.AppName=Demo',
-        '-X github.com/issueye/version-mana/internal/initialize.Branch=BRANCH',
-        '-X github.com/issueye/version-mana/internal/initialize.Commit=COMMIT',
-        '-X github.com/issueye/version-mana/internal/initialize.Date=NOW',
-        '-X github.com/issueye/version-mana/internal/initialize.AppName=DESCRIPTION',
-        '-X github.com/issueye/version-mana/internal/initialize.Version=VERSION',
-    ],
-    main: {
-        path: 'main.go'
-    }
-}`
 
 // 测试运行
 const testRunClick = async () => {
@@ -200,22 +164,10 @@ const saveCodeClick = async () => {
     }
 }
 
-onMounted(() => {
-    let value =
-        `
+onMounted(() => {})
 
-
-
-
-
-
-
-
-`
-
-
-    code.value = value
-    logInfo.value = value
+onUnmounted(() => {
+    cmRef.value.destroy()
 })
 
 // 行选中
@@ -223,51 +175,36 @@ const handleRowClick = async (row, event, column) => {
     bus.$emit("mitt-repo-table-row-click", row)
 
     // 获取分支信息
-    let { data } = await apiBranchList(row.id)
-    if (data.code == 200) {
-        bus.$emit('mitt-repo-branch', data.data)
-    }
-}
-
-// 打开窗口
-const openDialog = () => {
-    // code.value = ''
+    // let { data } = await apiBranchList(row.id)
+    // if (data.code == 200) {
+    //     bus.$emit('mitt-repo-branch', data.data)
+    // } else {
+    //     ElMessage({
+    //         type: 'error',
+    //         message: data.message,
+    //     })
+    // }
 }
 
 // 编辑代码弹窗打开
 const editCodeOpen = () => {
+    cmRef.value.refresh()
+    logcmRef.value.refresh()
+    logInfo.value = ''
+    // 连接 websocket
     let url = `ws://127.0.0.1:10061/api/v1/repo/ws/${form.id}`
     console.log(url);
     ws = new WebSocket(url)
     ws.onmessage = (data) => {
         console.log('data', data);
-        logInfo.value += `${createLog(data.data + '\n', 'info')}`
+        logInfo.value += `${data.data}\n`
     }
 }
 
 // 编辑代码弹窗关闭
 const editCodeClose = () => {
     ws.close()
-}
-
-// 插入模板代码
-const insertTlClick = () => {
-    ElMessageBox.confirm(
-        '是否插入模板代码，如果插入将替换代码',
-        '警告',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    ).then(() => {
-        code.value = templateCode
-    }).catch(() => {
-        ElMessage({
-            type: 'info',
-            message: '取消插入模板代码',
-        })
-    })
+    getData()
 }
 
 // 取消修改
@@ -315,7 +252,6 @@ const removeRepoClick = async (row) => {
 const repoSaveClick = async () => {
     try {
         form.code = code.value
-
         if (operationType.value == 0) {
             // 添加
             let { data } = await apiRepoCreate(form)
@@ -324,6 +260,9 @@ const repoSaveClick = async () => {
                     type: 'success',
                     message: data.message,
                 })
+
+                repoVisible.value = false
+                getData()
             }
         } else {
             // 修改
@@ -336,21 +275,24 @@ const repoSaveClick = async () => {
             }
         }
     } finally {
-        code.value = ''
-        repoVisible.value = false
-        getData()
+
     }
 }
 
-// 编辑代码
+// 编辑代码按钮
 const editCodeClick = (row) => {
-    code.value = row.code
     form.id = row.id
     form.code = row.code
+
+    code.value = row.code
+    if (row.code.trim() == '') {
+        code.value = ''
+    }
+
     codeVisible.value = true
 }
 
-// 编辑仓库
+// 编辑仓库按钮
 const editClick = (row) => {
     form.project_name = row.project_name
     form.server_name = row.server_name
@@ -363,7 +305,7 @@ const editClick = (row) => {
     repoVisible.value = true
 }
 
-// 添加仓库
+// 添加仓库按钮
 const addRepoClick = () => {
     form.project_name = ''
     form.server_name = ''
