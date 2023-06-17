@@ -9,6 +9,14 @@ export const apiRepoList = (params) => {
     })
 }
 
+// 查询单条
+export const apiRepoGetById = (id) => {
+    return request({
+        url: `api/v1/repo/${id}`,
+        method: 'get',
+    })
+}
+
 // 添加
 export const apiRepoCreate = (data) => {
     return request({
