@@ -18,7 +18,7 @@
                             </el-select>
                         </el-form-item>
                     </el-col>
-                    <el-col :span="5">
+                    <el-col :span="8">
                         <el-form-item label="分支">
                             <el-select v-model="detailForm.branch" :clearable="true" placeholder="请选择分支"
                                 @change="branchChange">

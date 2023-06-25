@@ -74,7 +74,6 @@ const form = reactive({
     proxy_url: '',
     proxy_user: '',
     proxy_pwd: '',
-    code: ''
 })
 
 const tableData = ref([])
@@ -142,7 +141,6 @@ const removeRepoClick = async (row) => {
 // 保存信息
 const repoSaveClick = async () => {
     try {
-        form.code = code.value
         if (operationType.value == 0) {
             // 添加
             let { data } = await apiRepoCreate(form)
@@ -163,6 +161,8 @@ const repoSaveClick = async () => {
                     type: 'success',
                     message: data.message,
                 })
+                repoVisible.value = false
+                getData()
             }
         }
     } finally {
