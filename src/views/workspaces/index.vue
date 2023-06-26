@@ -1,9 +1,13 @@
 <template>
     <div class="content-box">
         <div class="header-box">
-            <!-- <el-button type="primary">打开仓库</el-button> -->
-            <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
-            <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
+            <div class="project-name-box">
+                <span class="board-box">.</span> {{ repoInfo.project_name }}
+            </div>
+            <div>
+                <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
+                <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
+            </div>
         </div>
         <el-divider class="header-divider" />
         <!-- 版本内容 -->
@@ -69,7 +73,7 @@
             <el-button @click="downloadAppClick">下载</el-button>
         </div>
         <div class="code-box">
-            <Codemirror class="code-mirror" height="500px" v-model:value="code" :options="cmOptions" border
+            <Codemirror class="code-mirror" height="500px" v-model:value="code" ref="cmRef" :options="cmOptions" border
                 :KeepCursorInEnd="true" @change="onChange" @input="onInput" @ready="onReady" />
         </div>
     </el-dialog>
@@ -85,6 +89,7 @@ import "codemirror/mode/javascript/javascript.js";
 import CodeEdit from './codeEdit.vue'
 import Codemirror, { createTitle } from "codemirror-editor-vue3"
 import VersionEdit from './versionEdit.vue'
+import dayjs from 'dayjs'
 
 // 添加版本弹窗  addVersionDialogVisible
 const versionDialogVisible = ref(false);
@@ -108,6 +113,7 @@ const tagOptions = [
 ]
 
 // 代码
+const cmRef = ref('')
 const code = ref('')
 const cmOptions = {
     mode: "cflog",
@@ -139,6 +145,7 @@ const detailForm = reactive({
     tag: 'alpha',
     branch: '',
     pageNum: 1,
+    repo_id: '',
     pageSize: 10,
 })
 
@@ -151,6 +158,7 @@ onMounted(() => {
         repoInfo.project_name = data.project_name
         repoInfo.server_name = data.server_name
         repoInfo.repo_url = data.repo_url
+        detailForm.repo_id = data.id
 
         getData()
     })
@@ -223,8 +231,14 @@ const branchChange = (val) => {
     getData()
 }
 
+// 编译程序
+const compileAppClick = () => {
+    // 
+}
+
 // 打开程序弹窗
 const openAppDialog = () => {
+    cmRef.value.refresh()
     code.value = `${createTitle('程序记录信息 ' + dayjs().format('YYYY-MM-DD HH:mm:ss'))}`
 }
 
@@ -299,7 +313,20 @@ const viewInfoClick = (row) => {
 
 <style scoped>
 .header-box {
-    text-align: end;
+    display: flex;
+    justify-content: space-between;
+}
+
+.project-name-box{
+    font-size: 20px;
+}
+
+.board-box{
+    display:inline-block;
+    background: #0f79f1;
+    width: 5px;
+    height: 30px;
+    color: #0f79f1;
 }
 
 .pagination-box {
