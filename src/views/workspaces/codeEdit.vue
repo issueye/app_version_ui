@@ -144,7 +144,7 @@ const editCodeOpen = async (val) => {
         })
     }
 
-    let url = `ws://127.0.0.1:10061/api/v1/repo/ws/${repo_id.value}`
+    let url = `ws://${window.location.host}/api/v1/repo/ws/${repo_id.value}`
     ws = new WebSocket(url)
     ws.onmessage = (value) => {
         logInfo.value += `${value.data}\n`
