@@ -5,7 +5,7 @@
                 <span class="board-box">.</span> {{ repoInfo.project_name }}
             </div>
             <div>
-                <el-button type="primary">查看迭代内容</el-button>
+                <el-button type="primary" @click="appTreeClick">查看迭代内容</el-button>
                 <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
                 <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
                 <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
@@ -73,8 +73,14 @@
         <CompileEdit />
     </el-dialog>
     <!-- 下载程序 -->
-    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" @open="openDownDialog" width="55%" :destroy-on-close="true">
+    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" @open="openDownDialog"
+        width="55%" :destroy-on-close="true">
         <Down />
+    </el-dialog>
+    <!-- 更新树 -->
+    <el-dialog title="迭代记录" v-model="treeDialogVisible" :close-on-click-modal="false" top="5px" @open="openTreeDialog"
+        width="55%" :destroy-on-close="true">
+        <TimeTree />
     </el-dialog>
 </template>
 
@@ -89,6 +95,7 @@ import CodeEdit from './codeEdit.vue'
 import CompileEdit from './compileEdit.vue'
 import VersionEdit from './versionEdit.vue'
 import Down from './down.vue'
+import TimeTree from './timeTree.vue'
 
 // 添加版本弹窗  addVersionDialogVisible
 const versionDialogVisible = ref(false);
@@ -102,6 +109,8 @@ const codeEditVisible = ref(false)
 const appDialogVisible = ref(false)
 // 下载
 const downDialogVisible = ref(false)
+// 时间树
+const treeDialogVisible = ref(false)
 // 分支下拉
 const branchOptions = ref([])
 // 发布类型下拉
@@ -242,6 +251,10 @@ const openDownDialog = () => {
     })
 }
 
+const openTreeDialog = () => {
+    bus.$emit('mitt-time-tree-open', repoInfo)
+}
+
 
 // 添加版本点击按钮
 const handleOpenDialogOpen = () => {
@@ -291,12 +304,26 @@ const removeVersionClick = (row) => {
         }
     }).catch(() => {
         ElMessage({
-                type: 'info',
-                message: '取消移除',
-            })
+            type: 'info',
+            message: '取消移除',
+        })
     }).finally(() => {
         getData()
     })
+}
+
+// 时间树
+const appTreeClick = () => {
+    // 没有选择中
+    if (repoInfo.project_id == '') {
+        ElMessage({
+            type: 'warning',
+            message: '请选择仓库',
+        })
+        return
+    }
+
+    treeDialogVisible.value = true
 }
 
 // 程序下载
@@ -335,12 +362,12 @@ const viewInfoClick = (row) => {
     justify-content: space-between;
 }
 
-.project-name-box{
+.project-name-box {
     font-size: 20px;
 }
 
-.board-box{
-    display:inline-block;
+.board-box {
+    display: inline-block;
     background: #1a94bc;
     width: 5px;
     height: 30px;
@@ -359,5 +386,4 @@ const viewInfoClick = (row) => {
 .content-detail-box {
     margin-top: 30px;
 }
-
 </style>

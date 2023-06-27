@@ -130,3 +130,12 @@ export const apiVersionReleaseDelete = (id) => {
         method: 'delete',
     })
 }
+
+// 下载程序
+export const apiVersionReleaseDownload = (id) => {
+    return request({
+        url: `api/v1/repo/version/release/download/${id}`,
+        method: 'get',
+        responseType: 'blob',
+    })
+}

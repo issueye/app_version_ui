@@ -31,12 +31,14 @@
             <el-table-column prop="internal_version" label="内部版号" width="100" />
             <el-table-column label="平台" width="100">
                 <template #default="props">
-                    <el-tag v-if="props.row.platform == 0" size="small" type="success">windows</el-tag> <el-tag v-else size="small">linux</el-tag>
+                    <el-tag v-if="props.row.platform == 0" size="small" type="success">windows</el-tag> <el-tag v-else
+                        size="small">linux</el-tag>
                 </template>
             </el-table-column>
             <el-table-column prop="tag" label="发布类型" width="120" />
             <el-table-column prop="branch" label="分支" width="150" show-overflow-tooltip />
             <el-table-column prop="create_at" label="编译时间" width="230" />
+            <el-table-column fixed="right" align="center" prop="down_count" label="下载次数" width="100" />
             <el-table-column fixed="right" label="操作" width="110" align="center">
                 <template #default="props">
                     <el-button link type="primary" size="small" @click="downClick(props.row)">下载</el-button>
@@ -53,7 +55,7 @@
 
 <script setup name="down">
 import { ref, onMounted, onUnmounted, reactive } from 'vue'
-import { apiVersionReleaseDelete, apiVersionReleaseList } from '../../api/repo';
+import { apiVersionReleaseDelete, apiVersionReleaseList, apiVersionReleaseDownload } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import bus from '../../bus';
 
@@ -101,7 +103,7 @@ const editOpen = async (val) => {
     branchOptions.value = val.branch
 }
 
-const getData = async() => {
+const getData = async () => {
     let { data } = await apiVersionReleaseList(detailForm)
     if (data.code != 200) {
         ElMessage({
@@ -132,6 +134,34 @@ const tagChange = (val) => {
     getData()
 }
 
+// 下载文件
+const downClick = async (row) => {
+    let res = await apiVersionReleaseDownload(row.id)
+    console.log(res);
+
+    // 文件导出
+    if (!res) {
+        return
+    }
+
+    let url = window.URL.createObjectURL(res.data)
+    let link = document.createElement('a')
+    link.style.display = 'none'
+    link.href = url;
+
+    let name = row.app_name
+    if (row.platform == 0) {
+        name += '.exe'
+    }
+
+    link.setAttribute('download', name)
+
+    document.body.appendChild(link)
+    link.click()
+
+    getData()
+}
+
 // 移除程序
 const removeClick = (row) => {
     ElMessageBox.confirm(
@@ -152,9 +182,9 @@ const removeClick = (row) => {
         }
     }).catch(() => {
         ElMessage({
-                type: 'info',
-                message: '取消移除',
-            })
+            type: 'info',
+            message: '取消移除',
+        })
     }).finally(() => {
         getData()
     })
