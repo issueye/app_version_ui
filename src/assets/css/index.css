@@ -114,16 +114,17 @@ html {
 .el-dialog__header {
     background: #1a94bc;
     margin-right: 0px;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
 }
 
 .el-dialog__headerbtn {
-    height: 40px;
+    height: 30px;
 }
 
 .el-dialog__title {
     line-height: 10px;
     color: #fff;
+    font-size: 16px;
 }
 
 .el-dialog__headerbtn .el-dialog__close {
@@ -148,10 +149,17 @@ html {
 
     --el-button-disabled-bg-color: #3fa7d0;
     --el-button-disabled-border-color: #3fa7d0;
+
+    
+}
+
+.el-button--primary.is-link{
+    --el-button-text-color: #1a94bc; 
+    --el-button-hover-text-color: #5cb3cc;
 }
 
 .el-button {
-    --el-button-hover-text-color: #606266;
+    --el-button-hover-text-color: #fff;
     --el-button-hover-border-color: #95d8ea;
     --el-button-active-border-color: #158bb8;
 }

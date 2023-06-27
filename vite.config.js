@@ -14,11 +14,17 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: path => path.replace('/^\/api/', '/api')
       },
-      '/ws': {
+      '/api/v1/repo/ws': {
         target: 'ws://127.0.0.1:10061',
         changeOrigin: true,
         ws: true,
-        rewrite: path => path.replace('/^\/ws/', '/socket')
+        rewrite: path => path.replace('/^\/api/v1/repo/ws/', '/api/v1/repo/ws')
+      },
+      '/api/v1/repo/version/ws': {
+        target: 'ws://127.0.0.1:10061',
+        changeOrigin: true,
+        ws: true,
+        rewrite: path => path.replace('/^\/api/v1/repo/version/ws/', '/api/v1/repo/version/ws')
       }
     }
   }

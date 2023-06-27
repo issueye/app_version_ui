@@ -112,3 +112,21 @@ export const apiVersionBuild = (id) => {
         method: 'get',
     })
 }
+
+
+// 编译版本
+export const apiVersionReleaseList = (params) => {
+    return request({
+        url: `api/v1/repo/version/release`,
+        method: 'get',
+        params: params,
+    })
+}
+
+// 编译版本
+export const apiVersionReleaseDelete = (id) => {
+    return request({
+        url: `api/v1/repo/version/release/${id}`,
+        method: 'delete',
+    })
+}

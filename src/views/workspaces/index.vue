@@ -5,6 +5,8 @@
                 <span class="board-box">.</span> {{ repoInfo.project_name }}
             </div>
             <div>
+                <el-button type="primary">查看迭代内容</el-button>
+                <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
                 <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
                 <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
             </div>
@@ -47,7 +49,7 @@
                 <template #default="props">
                     <el-button link type="primary" size="small" @click="removeVersionClick(props.row)">移除</el-button>
                     <el-button link type="primary" size="small" @click="viewInfoClick(props.row)">查看</el-button>
-                    <el-button link type="primary" size="small" @click="appInfoClick(props.row)">程序</el-button>
+                    <el-button link type="primary" size="small" @click="appCompileClick(props.row)">编译</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -68,28 +70,25 @@
     </el-dialog>
     <!-- 程序信息 -->
     <el-dialog title="程序" v-model="appDialogVisible" :close-on-click-modal="false" top="5px" @open="openAppDialog">
-        <div class="app-button-group-box">
-            <el-button type="primary" @click="compileAppClick">编译</el-button>
-            <el-button @click="downloadAppClick">下载</el-button>
-        </div>
-        <div class="code-box">
-            <Codemirror class="code-mirror" height="500px" v-model:value="code" ref="cmRef" :options="cmOptions" border
-                :KeepCursorInEnd="true" @change="onChange" @input="onInput" @ready="onReady" />
-        </div>
+        <CompileEdit />
+    </el-dialog>
+    <!-- 下载程序 -->
+    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" @open="openDownDialog" width="55%" :destroy-on-close="true">
+        <Down />
     </el-dialog>
 </template>
 
 <script setup name="workspaces">
 import { reactive, ref, onMounted, onUnmounted } from "vue"
 
-import { apiVersionList, apiVersionRemove, apiVersionBuild } from "../../api/repo";
+import { apiVersionList, apiVersionRemove } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
 import bus from "../../bus";
 import "codemirror/mode/javascript/javascript.js";
 import CodeEdit from './codeEdit.vue'
-import Codemirror, { createTitle } from "codemirror-editor-vue3"
+import CompileEdit from './compileEdit.vue'
 import VersionEdit from './versionEdit.vue'
-import dayjs from 'dayjs'
+import Down from './down.vue'
 
 // 添加版本弹窗  addVersionDialogVisible
 const versionDialogVisible = ref(false);
@@ -99,9 +98,10 @@ const versionTitle = ref('添加版本');
 const versionDialogType = ref(0)
 // 代码编辑器显示
 const codeEditVisible = ref(false)
-
 // 程序
 const appDialogVisible = ref(false)
+// 下载
+const downDialogVisible = ref(false)
 // 分支下拉
 const branchOptions = ref([])
 // 发布类型下拉
@@ -112,15 +112,6 @@ const tagOptions = [
     { label: 'release', value: 'release' }
 ]
 
-// 代码
-const cmRef = ref('')
-const code = ref('')
-const cmOptions = {
-    mode: "cflog",
-    lineNumbers: true,
-    lineWrapping: true,
-    readOnly: true,
-}
 
 // 分页信息
 const current = ref(1)
@@ -134,8 +125,6 @@ const repoInfo = reactive({
 })
 // 行数据
 const rowData = ref({})
-// 版本id
-const versionId = ref('')
 // 表格数据
 const tableData = ref([]);
 
@@ -201,6 +190,15 @@ const editCodeClose = () => {
 
 // 修改脚本
 const editCodeClick = () => {
+    // 没有选择中
+    if (repoInfo.project_id == '') {
+        ElMessage({
+            type: 'warning',
+            message: '请选择仓库',
+        })
+        return
+    }
+
     codeEditVisible.value = true
 }
 
@@ -231,15 +229,17 @@ const branchChange = (val) => {
     getData()
 }
 
-// 编译程序
-const compileAppClick = () => {
-    // 
-}
-
 // 打开程序弹窗
 const openAppDialog = () => {
-    cmRef.value.refresh()
-    code.value = `${createTitle('程序记录信息 ' + dayjs().format('YYYY-MM-DD HH:mm:ss'))}`
+    bus.$emit('mitt-compile-edit-open', rowData.value)
+}
+
+// 打开下载管理
+const openDownDialog = () => {
+    bus.$emit('mitt-down-open', {
+        repo: repoInfo,
+        branch: branchOptions.value,
+    })
 }
 
 
@@ -289,14 +289,32 @@ const removeVersionClick = (row) => {
                 message: data.message,
             })
         }
+    }).catch(() => {
+        ElMessage({
+                type: 'info',
+                message: '取消移除',
+            })
     }).finally(() => {
         getData()
     })
 }
 
+// 程序下载
+const appDownloadClick = () => {
+    // 没有选择中
+    if (repoInfo.project_id == '') {
+        ElMessage({
+            type: 'warning',
+            message: '请选择仓库',
+        })
+        return
+    }
+    downDialogVisible.value = true
+}
+
 // 弹窗程序
-const appInfoClick = (row) => {
-    versionId.value = row.id
+const appCompileClick = (row) => {
+    rowData.value = row
     appDialogVisible.value = true
 }
 
@@ -323,10 +341,10 @@ const viewInfoClick = (row) => {
 
 .board-box{
     display:inline-block;
-    background: #0f79f1;
+    background: #1a94bc;
     width: 5px;
     height: 30px;
-    color: #0f79f1;
+    color: #1a94bc;
 }
 
 .pagination-box {
@@ -342,13 +360,4 @@ const viewInfoClick = (row) => {
     margin-top: 30px;
 }
 
-
-
-.code-box {
-    margin-top: 10px;
-}
-
-.app-button-group-box {
-    text-align: end;
-}
 </style>
