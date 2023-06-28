@@ -69,6 +69,14 @@ export const apiBranchList = (id) => {
     })
 }
 
+// 刷新分支列表
+export const apiBranchRefresh = (id) => {
+    return request({
+        url: `api/v1/repo/branch/refresh/${id}`,
+        method: 'get',
+    })
+}
+
 // 获取最后一次版本信息
 export const apiLastVerNum = (id, params) => {
     return request({

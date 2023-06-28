@@ -15,8 +15,8 @@
                 <el-table-column prop="create_at" label="创建时间" width="230" />
                 <el-table-column fixed="right" label="操作" align="center" width="180">
                     <template #default="props">
-                        <el-button link type="primary" size="small"
-                            @click.native.close="editClick(props.row)">编辑</el-button>
+                        <el-button link type="primary" size="small" @click.native.close="editClick(props.row)">编辑</el-button>
+                        <el-button link type="primary" size="small" @click.native.close="refreshBranchClick(props.row)">刷新分支</el-button>
                         <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                     </template>
                 </el-table-column>
@@ -57,7 +57,7 @@
 
 <script setup name="repoMana">
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
-import { apiBranchList, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
+import { apiBranchList, apiBranchRefresh, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import bus from '../../bus';
 
@@ -167,6 +167,14 @@ const repoSaveClick = async () => {
         }
     } finally {
 
+    }
+}
+
+// 刷新分支信息
+const refreshBranchClick = async(row) => {
+    let { data } = await apiBranchRefresh(row.id)
+    if (data.code == 200) {
+        
     }
 }
 
