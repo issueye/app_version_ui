@@ -79,7 +79,7 @@
     </el-dialog>
     <!-- 更新树 -->
     <el-dialog title="迭代记录" v-model="treeDialogVisible" :close-on-click-modal="false" top="5px" @open="openTreeDialog"
-        width="55%" :destroy-on-close="true">
+        width="40%" :destroy-on-close="true">
         <TimeTree />
     </el-dialog>
 </template>
@@ -252,7 +252,10 @@ const openDownDialog = () => {
 }
 
 const openTreeDialog = () => {
-    bus.$emit('mitt-time-tree-open', repoInfo)
+    bus.$emit('mitt-time-tree-open', {
+        repo: repoInfo,
+        branchList: branchOptions.value,
+    })
 }
 
 

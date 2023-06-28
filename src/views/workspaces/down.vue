@@ -55,9 +55,9 @@
 
 <script setup name="down">
 import { ref, onMounted, onUnmounted, reactive } from 'vue'
-import { apiVersionReleaseDelete, apiVersionReleaseList, apiVersionReleaseDownload } from '../../api/repo';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import bus from '../../bus';
+import { apiVersionReleaseDelete, apiVersionReleaseList, apiVersionReleaseDownload } from '../../api/repo'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import bus from '../../bus'
 
 // 发布类型下拉
 const tagOptions = [
@@ -79,11 +79,12 @@ const tableData = ref([]);
 const detailForm = reactive({
     tag: 'alpha',
     branch: '',
+    repo_id: '',
     pageNum: 1,
     pageSize: 10,
 })
 
-// 保存代码
+// 查询
 const queryClick = async () => {
     getData()
 }
@@ -100,7 +101,10 @@ onUnmounted(() => {
 })
 // 编辑代码弹窗打开
 const editOpen = async (val) => {
+    console.log('detailForm', detailForm);
+    detailForm.repo_id = val.repo.project_id
     branchOptions.value = val.branch
+    getData()
 }
 
 const getData = async () => {
@@ -115,8 +119,6 @@ const getData = async () => {
     tableData.value = data.data
     total.value = data.pageInfo.total
 }
-
-getData()
 
 const currentChange = (val) => {
     current.value = val
