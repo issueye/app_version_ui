@@ -55,7 +55,7 @@
             </el-table-column>
         </el-table>
         <div class="pagination-box">
-            <el-pagination small background layout="prev, pager, next" :current-page="current" :total="total"
+            <el-pagination small background layout="prev, pager, next" :current-page="current" :total="detailForm.total"
                 @current-change="currentChange" />
         </div>
     </div>
@@ -102,47 +102,17 @@ let repoInfoStore = useRepoInfoStore();
 let versionInfoStore = useVersionInfoStore();
 
 const { id, project_name, branchOptions, tagOptions } = storeToRefs(repoInfoStore);
-const {id: versionId, versionDialogType } = storeToRefs(versionInfoStore);
+const {versionDialogType, tableData, detailForm } = storeToRefs(versionInfoStore);
 
-
-// 添加版本弹窗  addVersionDialogVisible
-const versionDialogVisible = ref(false);
-// 弹窗标题
-const versionTitle = ref('添加版本');
-
-// 代码编辑器显示
-const codeEditVisible = ref(false)
-// 程序
-const appDialogVisible = ref(false)
-// 下载
-const downDialogVisible = ref(false)
-// 时间树
-const treeDialogVisible = ref(false)
+const versionDialogVisible = ref(false)         // 添加版本弹窗  addVersionDialogVisible
+const versionTitle = ref('添加版本')             // 弹窗标题
+const codeEditVisible = ref(false)              // 代码编辑器显示
+const appDialogVisible = ref(false)             // 程序
+const downDialogVisible = ref(false)            // 下载
+const treeDialogVisible = ref(false)            // 时间树
 
 // 分页信息
 const current = ref(1)
-const total = ref(0)
-// 仓库信息
-const repoInfo = reactive({
-    project_name: '',
-    project_id: '',
-    server_name: '',
-    repo_url: '',
-})
-// 行数据
-const rowData = ref({})
-// 表格数据
-const tableData = ref([]);
-
-
-// 明细表单信息
-const detailForm = reactive({
-    tag: '',
-    branch: '',
-    pageNum: 1,
-    repo_id: '',
-    pageSize: 10,
-})
 
 // 版本编辑弹窗关闭
 const versionEditClose = () => {
@@ -197,13 +167,9 @@ const branchChange = (val) => {
 }
 
 // 获取版本列表
-const getData = async () => {
+const getData = () => {
     detailForm.pageNum = current.value
-    let { data } = await apiVersionList(detailForm)
-    if (data.code == 200) {
-        tableData.value = data.data
-        total.value = data.pageInfo.total
-    }
+    versionInfoStore.getData()
 }
 
 getData()

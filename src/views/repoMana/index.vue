@@ -15,7 +15,8 @@
                 <el-table-column prop="create_at" label="创建时间" width="230" />
                 <el-table-column fixed="right" label="操作" align="center" width="110">
                     <template #default="props">
-                        <el-button link type="primary" size="small" @click.native.close="editClick(props.row)">编辑</el-button>
+                        <el-button link type="primary" size="small"
+                            @click.native.close="editClick(props.row)">编辑</el-button>
                         <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                     </template>
                 </el-table-column>
@@ -48,153 +49,102 @@
             </el-form>
             <div class="repo-dialog-footer-box">
                 <el-button type="primary" @click="repoSaveClick">确定</el-button>
-                <el-button @click="cancelClick">取消</el-button>
+                <el-button @click="repoVisible = false">取消</el-button>
             </div>
         </div>
     </el-dialog>
 </template>
 
 <script setup name="repoMana">
-import { reactive, ref, onMounted, onUnmounted } from 'vue'
-import { apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import useRepoInfoStore from '../../store/repoInfo';
+import { ref } from "vue";
+import {
+    apiRepoCreate,
+    apiRepoDel,
+    apiRepoList,
+    apiRepoModify,
+} from "../../api/repo";
+import { ElMessage, ElMessageBox } from "element-plus";
+import useRepoInfoStore from "../../store/repoInfo";
+import { storeToRefs } from "pinia";
 
-// 仓库状态管理
-let repoInfoStore = useRepoInfoStore();
+let repoInfoStore = useRepoInfoStore(); // 仓库状态管理
+let { form, tableData } = storeToRefs(repoInfoStore);
 
-const repoVisible = ref(false)
-const repoTitle = ref('添加仓库')
-const operationType = ref(0) // 0 添加 1 编辑
-
-// 表单信息
-const form = reactive({
-    id: '',
-    project_name: '',
-    server_name: '',
-    repo_url: '',
-    proxy_url: '',
-    proxy_user: '',
-    proxy_pwd: '',
-})
-
-const tableData = ref([])
-
-onMounted(() => { })
-
-onUnmounted(() => { })
+const repoVisible = ref(false);
+const repoTitle = ref("添加仓库");
+const operationType = ref(0); // 0 添加 1 编辑
 
 // 行选中
 const handleRowClick = (row, event, column) => {
     // 赋值
-    repoInfoStore.setInfo(row)
-    repoInfoStore.getBranchList()
-}
-
-// 取消修改
-const cancelClick = () => {
-    repoVisible.value = false
-}
+    repoInfoStore.setInfo(row);
+};
 
 // 获取仓库列表
 const getData = async () => {
-    let { data } = await apiRepoList()
+    let { data } = await apiRepoList();
     if (data.code == 200) {
-        tableData.value = data.data
+        tableData.value = data.data;
     }
-}
+};
 
 // 打开获取仓库列表
-getData()
+getData();
 
 // 移除仓库
 const removeRepoClick = async (row) => {
-    ElMessageBox.confirm(
-        '是否移除仓库',
-        '警告',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    ).then(async () => {
-
-        let { data } = await apiRepoDel(row.id)
-        if (data.code == 200) {
-            ElMessage({
-                type: 'success',
-                message: data.message,
-            })
-        }
-    }).finally(() => {
-        getData()
+    ElMessageBox.confirm("是否移除仓库", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
     })
-}
+        .then(async () => {
+            let { data } = await apiRepoDel(row.id);
+            if (data.code == 200) {
+                ElMessage({
+                    type: "success",
+                    message: data.message,
+                });
+            }
+        })
+        .finally(() => {
+            getData();
+        });
+};
 
 // 保存信息
 const repoSaveClick = async () => {
-    try {
-        if (operationType.value == 0) {
-            // 添加
-            let { data } = await apiRepoCreate(form)
-            if (data.code == 200) {
-                ElMessage({
-                    type: 'success',
-                    message: data.message,
-                })
-
-                repoVisible.value = false
-                getData()
-            }
-        } else {
-            // 修改
-            let { data } = await apiRepoModify(form)
-            if (data.code == 200) {
-                ElMessage({
-                    type: 'success',
-                    message: data.message,
-                })
-                repoVisible.value = false
-                getData()
-            }
+    if (operationType.value == 0) {
+        // 如果创建成功则关闭窗口
+        if (repoInfoStore.create()) {
+            repoVisible.value = false;
+            getData();
         }
-    } finally {
-
+    } else {
+        // 如果创建成功则关闭窗口
+        if (repoInfoStore.modify()) {
+            repoVisible.value = false;
+            getData();
+        }
     }
-}
+};
 
 // 编辑仓库按钮
 const editClick = (row) => {
-    form.project_name = row.project_name
-    form.server_name = row.server_name
-    form.repo_url = row.repo_url
-    form.id = row.id
-    form.proxy_url = row.proxy_url
-    form.proxy_user = row.proxy_user
-    form.proxy_pwd = row.proxy_pwd
-
-    repoTitle.value = '修改仓库信息'
-    operationType.value = 1
-    repoVisible.value = true
-}
+    repoInfoStore.viewData(row);
+    repoTitle.value = "修改仓库信息";
+    operationType.value = 1;
+    repoVisible.value = true;
+};
 
 // 添加仓库按钮
 const addRepoClick = () => {
-    form.project_name = ''
-    form.server_name = ''
-    form.repo_url = ''
-    form.mark = ''
-    form.id = ''
+    repoInfoStore.resetForm();
 
-    form.proxy_url = ''
-    form.proxy_user = ''
-    form.proxy_pwd = ''
-
-    repoTitle.value = '添加仓库'
-    operationType.value = 0
-    repoVisible.value = true
-}
-
+    repoTitle.value = "添加仓库";
+    operationType.value = 0;
+    repoVisible.value = true;
+};
 </script>
 
 <style scoped>
