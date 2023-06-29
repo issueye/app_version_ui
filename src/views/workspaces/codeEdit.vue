@@ -24,8 +24,12 @@ import "codemirror/mode/javascript/javascript.js";
 import "codemirror/theme/idea.css";
 import "codemirror/addon/hint/show-hint.css";
 import Codemirror from "codemirror-editor-vue3"
-import bus from '../../bus';
+import useRepoInfoStore from '../../store/repoInfo';
+import { storeToRefs } from 'pinia';
 
+// 仓库状态管理
+let repoInfoStore = useRepoInfoStore();
+const { id } = storeToRefs(repoInfoStore);
 
 // 代码
 const code = ref('')
@@ -49,10 +53,6 @@ const logOptions = {
     lineWrapping: true,
 }
 
-// 仓库id
-const repo_id = ref('')
-
-
 // 代码编辑器
 const onChange = (val, cm) => {
     console.log('onChange', val);
@@ -69,11 +69,9 @@ const onReady = (cm) => {
 // 测试运行
 const testRunClick = async () => {
     let codeData = {
-        id: repo_id.value,
+        id: id.value,
         code: code.value
     }
-
-    console.log('codeData = ', codeData);
 
     // 测试运行代码
     let { data } = await apiRepoTestRun(codeData)
@@ -93,7 +91,7 @@ const testRunClick = async () => {
 // 保存代码
 const saveCodeClick = async () => {
     let codeData = {
-        id: repo_id.value,
+        id: id.value,
         code: code.value
     }
     let { data } = await apiRepoModifyCode(codeData)
@@ -110,31 +108,12 @@ const saveCodeClick = async () => {
     }
 }
 
-onMounted(() => {
-    // 编辑窗口打开
-    bus.$on('mitt-code-edit-open', (val) => {
-        editCodeOpen(val)
-    })
-
-    bus.$on('mitt-code-edit-close', () => {
-
-    })
-})
-
-onUnmounted(() => {
-    bus.$off('mitt-code-edit-open', () => { })
-    bus.$off('mitt-code-edit-close', () => { })
-    cmRef.value.destroy()
-})
-// 编辑代码弹窗打开
-const editCodeOpen = async (val) => {
+onMounted( async() => {
     cmRef.value.refresh()
     logCmRef.value.refresh()
-    logInfo.value = ''
-    repo_id.value = val.project_id
 
     // 获取仓库的代码
-    let { data } = await apiRepoGetById(val.project_id)
+    let { data } = await apiRepoGetById(id.value)
     if (data.code == 200) {
         code.value = data.data.code
     } else {
@@ -144,12 +123,16 @@ const editCodeOpen = async (val) => {
         })
     }
 
-    let url = `ws://${window.location.host}/api/v1/repo/ws/${repo_id.value}`
+    let url = `ws://${window.location.host}/api/v1/repo/ws/${id.value}`
     ws = new WebSocket(url)
     ws.onmessage = (value) => {
         logInfo.value += `${value.data}\n`
     }
-}
+})
+
+onUnmounted(() => {
+    cmRef.value.destroy()
+})
 
 </script>
 

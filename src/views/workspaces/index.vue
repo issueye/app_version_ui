@@ -2,9 +2,10 @@
     <div class="content-box">
         <div class="header-box">
             <div class="project-name-box">
-                <span class="board-box">.</span> {{ repoInfo.project_name }}
+                <span class="board-box">.</span> {{ project_name }}
             </div>
             <div>
+                <el-button type="primary" @click="refreshClick">刷新分支列表</el-button>
                 <el-button type="primary" @click="appTreeClick">查看迭代内容</el-button>
                 <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
                 <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
@@ -18,7 +19,7 @@
                 <el-row>
                     <el-col :span="5">
                         <el-form-item label="发布类型">
-                            <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
+                            <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
                                 <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
@@ -60,49 +61,55 @@
     </div>
 
     <!-- 版本信息 -->
-    <el-dialog :title="versionTitle" v-model="versionDialogVisible" :close-on-click-modal="false" top="5px"
-        @open="handleOpenDialogOpen" width="40%">
+    <el-dialog :title="versionTitle" v-model="versionDialogVisible" :close-on-click-modal="false" destroy-on-close top="5px" width="40%">
         <VersionEdit @visible="versionEditClose" />
     </el-dialog>
     <!-- 编辑运行脚本 -->
-    <el-dialog title="编辑代码" v-model="codeEditVisible" fullscreen @open="editCodeOpen" @close="editCodeClose">
+    <el-dialog title="编辑代码" v-model="codeEditVisible" fullscreen @close="editCodeClose">
         <CodeEdit />
     </el-dialog>
     <!-- 程序信息 -->
-    <el-dialog title="程序" v-model="appDialogVisible" :close-on-click-modal="false" top="5px" @open="openAppDialog">
+    <el-dialog title="程序" v-model="appDialogVisible" :close-on-click-modal="false" top="5px">
         <CompileEdit />
     </el-dialog>
     <!-- 下载程序 -->
-    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" @open="openDownDialog"
-        width="55%" :destroy-on-close="true">
+    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" width="55%" :destroy-on-close="true">
         <Down />
     </el-dialog>
     <!-- 更新树 -->
-    <el-dialog title="迭代记录" v-model="treeDialogVisible" :close-on-click-modal="false" top="5px" @open="openTreeDialog"
-        width="40%" :destroy-on-close="true">
+    <el-dialog title="迭代记录" v-model="treeDialogVisible" :close-on-click-modal="false" top="5px" width="40%" :destroy-on-close="true">
         <TimeTree />
     </el-dialog>
 </template>
 
 <script setup name="workspaces">
-import { reactive, ref, onMounted, onUnmounted } from "vue"
+import { reactive, ref } from "vue"
 
 import { apiVersionList, apiVersionRemove } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
-import bus from "../../bus";
 import "codemirror/mode/javascript/javascript.js";
 import CodeEdit from './codeEdit.vue'
 import CompileEdit from './compileEdit.vue'
 import VersionEdit from './versionEdit.vue'
 import Down from './down.vue'
 import TimeTree from './timeTree.vue'
+import useRepoInfoStore from '../../store/repoInfo';
+import useVersionInfoStore from '../../store/versionInfo';
+import { storeToRefs } from 'pinia';
+
+// 仓库状态管理
+let repoInfoStore = useRepoInfoStore();
+let versionInfoStore = useVersionInfoStore();
+
+const { id, project_name, branchOptions, tagOptions } = storeToRefs(repoInfoStore);
+const {id: versionId, versionDialogType } = storeToRefs(versionInfoStore);
+
 
 // 添加版本弹窗  addVersionDialogVisible
 const versionDialogVisible = ref(false);
 // 弹窗标题
 const versionTitle = ref('添加版本');
-// 当前弹窗类型 0 添加版本 1 查看版本信息
-const versionDialogType = ref(0)
+
 // 代码编辑器显示
 const codeEditVisible = ref(false)
 // 程序
@@ -111,16 +118,6 @@ const appDialogVisible = ref(false)
 const downDialogVisible = ref(false)
 // 时间树
 const treeDialogVisible = ref(false)
-// 分支下拉
-const branchOptions = ref([])
-// 发布类型下拉
-const tagOptions = [
-    { label: "alpha", value: "alpha" },
-    { label: "beta", value: "beta" },
-    { label: "rc", value: "rc" },
-    { label: 'release', value: 'release' }
-]
-
 
 // 分页信息
 const current = ref(1)
@@ -140,55 +137,16 @@ const tableData = ref([]);
 
 // 明细表单信息
 const detailForm = reactive({
-    tag: 'alpha',
+    tag: '',
     branch: '',
     pageNum: 1,
     repo_id: '',
     pageSize: 10,
 })
 
-onMounted(() => {
-    // 仓库表格行点击
-    bus.$on("mitt-repo-table-row-click", (data) => {
-        console.log("mitt-repo-table-row-click => on", data);
-
-        repoInfo.project_id = data.id
-        repoInfo.project_name = data.project_name
-        repoInfo.server_name = data.server_name
-        repoInfo.repo_url = data.repo_url
-        detailForm.repo_id = data.id
-
-        getData()
-    })
-
-    // 仓库分支列表
-    bus.$on('mitt-repo-branch', (data) => {
-        branchOptions.value = []
-        data.forEach((item, index) => {
-            branchOptions.value.push({
-                label: item.short_name,
-                value: item.short_name,
-            })
-        })
-    })
-})
-
-onUnmounted(() => {
-    bus.$off("mitt-repo-table-row-click", () => { console.log("mitt-repo-table-row-click => off") })
-    bus.$off("mitt-repo-branch", () => { console.log("mitt-repo-table-row-click => off") })
-})
-
-
-
-// 编辑器打开时
-const editCodeOpen = () => {
-    // 将 code 和 id 传到组件
-    bus.$emit("mitt-code-edit-open", repoInfo)
-}
-
 // 版本编辑弹窗关闭
-const versionEditClose = (val) => {
-    versionDialogVisible.value = val
+const versionEditClose = () => {
+    versionDialogVisible.value = false
     getData()
 }
 
@@ -200,7 +158,7 @@ const editCodeClose = () => {
 // 修改脚本
 const editCodeClick = () => {
     // 没有选择中
-    if (repoInfo.project_id == '') {
+    if (id.value == '') {
         ElMessage({
             type: 'warning',
             message: '请选择仓库',
@@ -214,7 +172,7 @@ const editCodeClick = () => {
 // 添加版本
 const handleAddVersionClick = () => {
     // 没有选择中
-    if (repoInfo.project_id == '') {
+    if (id.value == '') {
         ElMessage({
             type: 'warning',
             message: '请选择仓库',
@@ -237,37 +195,6 @@ const branchChange = (val) => {
     detailForm.branch = val
     getData()
 }
-
-// 打开程序弹窗
-const openAppDialog = () => {
-    bus.$emit('mitt-compile-edit-open', rowData.value)
-}
-
-// 打开下载管理
-const openDownDialog = () => {
-    bus.$emit('mitt-down-open', {
-        repo: repoInfo,
-        branch: branchOptions.value,
-    })
-}
-
-const openTreeDialog = () => {
-    bus.$emit('mitt-time-tree-open', {
-        repo: repoInfo,
-        branchList: branchOptions.value,
-    })
-}
-
-
-// 添加版本点击按钮
-const handleOpenDialogOpen = () => {
-    if (versionDialogType.value == 0) {
-        bus.$emit('mitt-version-edit-add', repoInfo)
-    } else {
-        // 查看版本信息
-        bus.$emit('mitt-version-edit-view', rowData)
-    }
-};
 
 // 获取版本列表
 const getData = async () => {
@@ -315,10 +242,15 @@ const removeVersionClick = (row) => {
     })
 }
 
+// 刷新分支列表
+const refreshClick = () => {
+    repoInfoStore.reFreshBranch()
+}
+
 // 时间树
 const appTreeClick = () => {
     // 没有选择中
-    if (repoInfo.project_id == '') {
+    if (id.value == '') {
         ElMessage({
             type: 'warning',
             message: '请选择仓库',
@@ -332,7 +264,7 @@ const appTreeClick = () => {
 // 程序下载
 const appDownloadClick = () => {
     // 没有选择中
-    if (repoInfo.project_id == '') {
+    if (id.value == '') {
         ElMessage({
             type: 'warning',
             message: '请选择仓库',
@@ -344,14 +276,16 @@ const appDownloadClick = () => {
 
 // 弹窗程序
 const appCompileClick = (row) => {
-    rowData.value = row
+    versionInfoStore.rowData = row
     appDialogVisible.value = true
 }
 
 // 查看版本信息
 const viewInfoClick = (row) => {
-    rowData.value = row
     versionDialogType.value = 1
+    id.value = row.id
+    versionInfoStore.rowData = row
+
     versionTitle.value = '版本信息'
     versionDialogVisible.value = true
 }

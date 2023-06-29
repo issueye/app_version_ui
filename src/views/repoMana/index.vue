@@ -13,10 +13,9 @@
                 <el-table-column prop="server_name" label="服务名称" width="200" />
                 <el-table-column prop="repo_url" label="仓库地址" min-width="300" show-overflow-tooltip />
                 <el-table-column prop="create_at" label="创建时间" width="230" />
-                <el-table-column fixed="right" label="操作" align="center" width="180">
+                <el-table-column fixed="right" label="操作" align="center" width="110">
                     <template #default="props">
                         <el-button link type="primary" size="small" @click.native.close="editClick(props.row)">编辑</el-button>
-                        <el-button link type="primary" size="small" @click.native.close="refreshBranchClick(props.row)">刷新分支</el-button>
                         <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                     </template>
                 </el-table-column>
@@ -57,9 +56,12 @@
 
 <script setup name="repoMana">
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
-import { apiBranchList, apiBranchRefresh, apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
+import { apiRepoCreate, apiRepoDel, apiRepoList, apiRepoModify } from '../../api/repo';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import bus from '../../bus';
+import useRepoInfoStore from '../../store/repoInfo';
+
+// 仓库状态管理
+let repoInfoStore = useRepoInfoStore();
 
 const repoVisible = ref(false)
 const repoTitle = ref('添加仓库')
@@ -83,19 +85,10 @@ onMounted(() => { })
 onUnmounted(() => { })
 
 // 行选中
-const handleRowClick = async (row, event, column) => {
-    bus.$emit("mitt-repo-table-row-click", row)
-
-    // 获取分支信息
-    let { data } = await apiBranchList(row.id)
-    if (data.code == 200) {
-        bus.$emit('mitt-repo-branch', data.data)
-    } else {
-        ElMessage({
-            type: 'error',
-            message: data.message,
-        })
-    }
+const handleRowClick = (row, event, column) => {
+    // 赋值
+    repoInfoStore.setInfo(row)
+    repoInfoStore.getBranchList()
 }
 
 // 取消修改
@@ -167,14 +160,6 @@ const repoSaveClick = async () => {
         }
     } finally {
 
-    }
-}
-
-// 刷新分支信息
-const refreshBranchClick = async(row) => {
-    let { data } = await apiBranchRefresh(row.id)
-    if (data.code == 200) {
-        
     }
 }
 

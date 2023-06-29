@@ -1,7 +1,10 @@
 <template>
     <div class="home-warp">
         <el-container class="home-main">
-            <el-header class="home-header">程序版本管理系统</el-header>
+            <el-header class="home-header">
+                <img class="header-logo" :src="imgUrl">
+                <div class="header-title-box"> 程序版本管理系统 </div>
+            </el-header>
             <el-container>
                 <el-main class="main-box">
                     <el-row class="page-box">
@@ -27,6 +30,7 @@ import { ref } from 'vue'
 
 import RepoMana from './repoMana/index.vue'
 import Workspaces from './workspaces/index.vue'
+import imgUrl from '../assets/icon.png'
 
 </script>
 
@@ -57,9 +61,17 @@ import Workspaces from './workspaces/index.vue'
     align-items: center;
     height: 40px;
     background: #1a94bc;
-    /* text-align: center; */
+}
+
+.header-title-box{
     font-size: larger;
     color: #fff;
+}
+
+.header-logo{
+    height: 30px;
+    width: 30px;
+    margin-right: 10px;
 }
 
 .home-main {

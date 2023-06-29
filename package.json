@@ -1,5 +1,5 @@
 {
-  "name": "tools",
+  "name": "app-version-ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,7 +14,7 @@
     "codemirror-editor-vue3": "^2.3.0",
     "dayjs": "^1.11.8",
     "element-plus": "^2.3.4",
-    "mitt": "^3.0.0",
+    "pinia": "^2.1.4",
     "vue": "^3.2.47",
     "vue-router": "^4.2.1"
   },

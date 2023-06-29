@@ -5,7 +5,7 @@
                 <el-row>
                     <el-col :span="12">
                         <el-form-item label="发布类型">
-                            <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
+                            <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
                                 <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
                             </el-select>
@@ -37,20 +37,16 @@
 </template>
 
 <script setup name="timeTree">
-import { ref, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import { apiVersionList } from '../../api/repo';
-import bus from '../../bus';
 import LogCard from './logCard.vue'
+import useRepoInfoStore from '../../store/repoInfo';
+import { storeToRefs } from 'pinia';
 
-// 发布类型下拉
-const tagOptions = [
-    { label: "alpha", value: "alpha" },
-    { label: "beta", value: "beta" },
-    { label: "rc", value: "rc" },
-    { label: 'release', value: 'release' }
-]
-const branchOptions = ref([])
+// 仓库状态管理
+let repoInfoStore = useRepoInfoStore();
 
+const { id, branchOptions, tagOptions } = storeToRefs(repoInfoStore);
 let tableData = ref([])
 
 // 明细表单信息
@@ -60,33 +56,16 @@ const detailForm = reactive({
     repo_id: '',
 })
 
-onMounted(() => {
-    // 编辑窗口打开
-    bus.$on('mitt-time-tree-open', (val) => {
-        editOpen(val)
-    })
-})
-
-onUnmounted(() => {
-    bus.$off('mitt-time-tree-open', () => { })
-})
-// 编辑代码弹窗打开
-const editOpen = async (val) => {
-    console.log(val);
-    detailForm.repo_id = val.repo.project_id
-    branchOptions.value = val.branchList
-
-    getData()
-}
-
 const getData = async () => {
     // 获取当前仓库的所有版本信息
+    detailForm.repo_id = id.value
     let { data } = await apiVersionList(detailForm)
     if (data.code == 200) {
         tableData.value = data.data
     }
 }
 
+getData()
 
 // tag 发生变化时
 const tagChange = (val) => {

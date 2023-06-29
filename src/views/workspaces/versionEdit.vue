@@ -49,11 +49,22 @@
 </template>
 
 <script setup name="versionEdit">
-import { reactive, ref, watch, onMounted, onUnmounted, defineProps } from 'vue'
-import { apiBranchList, apiLastVerNum, apiVersionCreate } from '../../api/repo';
+import { reactive, ref, watch, onMounted, onUnmounted } from 'vue'
+import { apiLastVerNum, apiVersionCreate } from '../../api/repo';
 import { ElMessage } from 'element-plus';
 import dayjs from 'dayjs'
-import bus from '../../bus';
+
+
+import useRepoInfoStore from '../../store/repoInfo';
+import useVersionInfoStore from '../../store/versionInfo';
+import { storeToRefs } from 'pinia';
+
+// 仓库状态管理
+let repoInfoStore = useRepoInfoStore()
+let versionInfoStore = useVersionInfoStore();
+
+let { id, server_name, tagOptions, branchOptions, branchData } = storeToRefs(repoInfoStore)
+const {id: versionId, versionDialogType } = storeToRefs(versionInfoStore);
 
 const emits = defineEmits(['visible'])
 
@@ -64,6 +75,7 @@ const form = reactive({
     tag: 'alpha',           // 发布类型
     repo_id: '',            // 仓库id
     version: '',            // 版本
+    branch: '',             // 分支
     version_x: 0,           // 主版本
     version_y: 1,           // 功能版本
     version_z: 1,           // 迭代 bug
@@ -72,74 +84,48 @@ const form = reactive({
     min_z: 1,               // 
 })
 
-// 发布类型下拉
-const tagOptions = [
-    { label: "alpha", value: "alpha" },
-    { label: "beta", value: "beta" },
-    { label: "rc", value: "rc" },
-    { label: 'release', value: 'release' }
-]
-
-// 分支下拉
-const branchOptions = ref([])
-const branchData = ref([])
-
 // 监听表单变化
 var watchForm;
 
-// 当前弹窗类型 0 添加版本 1 查看版本信息
-const versionDialogType = ref(0)
-
-
 onMounted(() => {
-    // 添加版本
-    bus.$on('mitt-version-edit-add', (data) => {
-        console.log('mitt-version-edit-add', data);
-        createVers(data)
-    })
-
-    // 查看版本信息
-    bus.$on('mitt-version-edit-view', (versionData) => {
-        let data = versionData.value
-        viewVers(data)
-    })
+    if (versionDialogType.value == 0) {
+        createVers()
+    } else {
+        viewVers()
+    }
 })
 
 onUnmounted(() => {
-    // 关闭监听
-    watchForm()
+    if (versionDialogType.value == 0) {
+        // 关闭监听
+        watchForm()
+    }
 })
 
 // 创建版本初始化
-const createVers = (data) => {
-    versionDialogType.value = 0
+const createVers = () => {
     form.app_name = ''
     form.content = ''
     form.tag = 'alpha'
     form.branch = ''
-    form.repo_id = data.project_id
+    form.repo_id = id.value
     form.commit_hash = ''
     form.branch = ''
-
-    // 获取分支列表
-    getBranchList(data.project_id)
 
     // 监听表单内容是否发生了变化
     watchForm = watch(
         () => [form.tag, form.version_x, form.version_y, form.version_z],
         (newValue, oldValue) => {
-            let version = `v${newValue[1]}.${newValue[2]}.${newValue[3]}.${dayjs().format('MMDD')}_${newValue[0]}`
-            form.app_name = `${data.server_name}_${version}`
+            let version = `v${newValue[1]}.${newValue[2]}.${newValue[3]}.${dayjs().format('YYYYMMDD')}_${newValue[0]}`
+            form.app_name = `${server_name.value}_${version}`
             form.version = version
         },
         { immediate: true }
     )
 }
 
-const viewVers = (data) => {
-    // 弹窗类型 1 查看版本信息
-    versionDialogType.value = 1
-
+const viewVers = () => {
+    let data = versionInfoStore.rowData
     form.app_name = data.app_name
     form.content = data.content
     form.tag = data.tag
@@ -155,29 +141,6 @@ const viewVers = (data) => {
     form.version_x = +version[0]
     form.version_y = +version[1]
     form.version_z = +version[2]
-}
-
-// 获取分支列表
-const getBranchList = async (id) => {
-    // 获取分支信息
-    let { data } = await apiBranchList(id)
-    if (data.code == 200) {
-
-        branchData.value = data.data
-        branchOptions.value = []
-        data.data.forEach((item, index) => {
-            branchOptions.value.push({
-                label: item.short_name,
-                value: item.short_name,
-            })
-        })
-
-    } else {
-        ElMessage({
-            type: 'error',
-            message: data.message,
-        })
-    }
 }
 
 // 分支变化
@@ -196,7 +159,7 @@ const branchChange = async (val) => {
         tag: form.tag,
         branch: form.branch,
     }
-    let { data } = await apiLastVerNum(form.repo_id, params)
+    let { data } = await apiLastVerNum(id.value, params)
     if (data.code == 200) {
 
         let version_y = data.data.version_y == 0 ? 1 : data.data.version_y

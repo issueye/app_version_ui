@@ -14,7 +14,7 @@
 </template>
 
 <script setup name="timeTree">
-import { ref, onMounted, onUnmounted, reactive, defineProps } from 'vue'
+import { ref, onMounted, onUnmounted, defineProps } from 'vue'
 
 const props = defineProps({
     data: {
@@ -44,6 +44,7 @@ onUnmounted(() => { })
 
 .card-box{
     padding: 10px;
+    margin-right: 10px;
 }
 
 .content-box {

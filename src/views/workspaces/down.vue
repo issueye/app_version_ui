@@ -8,7 +8,7 @@
             <el-row>
                 <el-col :span="5">
                     <el-form-item label="发布类型">
-                        <el-select v-model="detailForm.tag" placeholder="请选择 tag" @change="tagChange">
+                        <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
                             <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                 :value="item.value" />
                         </el-select>
@@ -54,56 +54,32 @@
 </template>
 
 <script setup name="down">
-import { ref, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import { apiVersionReleaseDelete, apiVersionReleaseList, apiVersionReleaseDownload } from '../../api/repo'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import bus from '../../bus'
+import useRepoInfoStore from '../../store/repoInfo';
+import { storeToRefs } from 'pinia';
 
-// 发布类型下拉
-const tagOptions = [
-    { label: "alpha", value: "alpha" },
-    { label: "beta", value: "beta" },
-    { label: "rc", value: "rc" },
-    { label: 'release', value: 'release' }
-]
+// 仓库状态管理
+let repoInfoStore = useRepoInfoStore()
+let { id, tagOptions, branchOptions } = storeToRefs(repoInfoStore)
 
 const current = ref(1)
 const total = ref(0)
-
-// 分支下拉
-const branchOptions = ref([])
 
 // 表格数据
 const tableData = ref([]);
 
 const detailForm = reactive({
-    tag: 'alpha',
+    tag: '',
     branch: '',
-    repo_id: '',
+    repo_id: id.value,
     pageNum: 1,
     pageSize: 10,
 })
 
 // 查询
 const queryClick = async () => {
-    getData()
-}
-
-onMounted(() => {
-    // 编辑窗口打开
-    bus.$on('mitt-down-open', (val) => {
-        editOpen(val)
-    })
-})
-
-onUnmounted(() => {
-    bus.$off('mitt-down-open', () => { })
-})
-// 编辑代码弹窗打开
-const editOpen = async (val) => {
-    console.log('detailForm', detailForm);
-    detailForm.repo_id = val.repo.project_id
-    branchOptions.value = val.branch
     getData()
 }
 
@@ -119,6 +95,8 @@ const getData = async () => {
     tableData.value = data.data
     total.value = data.pageInfo.total
 }
+
+getData()
 
 const currentChange = (val) => {
     current.value = val

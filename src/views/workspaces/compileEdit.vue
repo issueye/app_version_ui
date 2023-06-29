@@ -22,8 +22,11 @@ import "codemirror/mode/javascript/javascript.js";
 import "codemirror/theme/idea.css";
 import "codemirror/addon/hint/show-hint.css";
 import Codemirror from "codemirror-editor-vue3"
-import bus from '../../bus';
+import useVersionInfoStore from '../../store/versionInfo';
+import { storeToRefs } from 'pinia';
 
+let versionInfoStore = useVersionInfoStore();
+const { rowData } = storeToRefs(versionInfoStore);
 
 // 代码
 const code = ref('')
@@ -42,26 +45,22 @@ var ws;
 
 const cmRef = ref('')
 
-// 仓库id
-const versionId = ref('')
-
-
 // 代码编辑器
 const onChange = (val, cm) => {
-    console.log('onChange', val);
+    // console.log('onChange', val);
 }
 
 const onInput = (val) => {
-    console.log('onInput', val);
+    // console.log('onInput', val);
 };
 
 const onReady = (cm) => {
-    console.log('onReady', cm.focus());
+    // console.log('onReady', cm.focus());
 };
 
 // 保存代码
 const compileAppClick = async () => {
-    let { data } = await apiVersionBuild(versionId.value)
+    let { data } = await apiVersionBuild(rowData.value.id)
     if (data.code == 200) {
         ElMessage({
             type: 'info',
@@ -70,30 +69,20 @@ const compileAppClick = async () => {
     }
 }
 
-onMounted(() => {
-    // 编辑窗口打开
-    bus.$on('mitt-compile-edit-open', (val) => {
-        editOpen(val)
-    })
-})
-
-onUnmounted(() => {
-    bus.$off('mitt-compile-edit-open', () => { })
-    cmRef.value.destroy()
-})
-// 编辑代码弹窗打开
-const editOpen = async (val) => {
+onMounted( async() => {
     cmRef.value.refresh()
     code.value = ''
-    versionId.value = val.id
-    versionInfo.name = val.app_name
 
-    let url = `ws://${window.location.host}/api/v1/repo/version/ws/${val.id}`
+    let url = `ws://${window.location.host}/api/v1/repo/version/ws/${rowData.value.id}`
     ws = new WebSocket(url)
     ws.onmessage = (value) => {
         code.value += `${value.data}\n`
     }
-}
+})
+
+onUnmounted(() => {
+    cmRef.value.destroy()
+})
 
 </script>
 
