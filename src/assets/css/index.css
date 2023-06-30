@@ -106,11 +106,11 @@ html {
     visibility: hidden;
 }
 
-.el-card{
+.el-card {
     --el-card-padding: 10px;
 }
 
-.card-header{
+.card-header {
     padding: 0px;
 }
 
@@ -155,11 +155,11 @@ html {
     --el-button-disabled-bg-color: #007AFF;
     --el-button-disabled-border-color: #007AFF;
 
-    
+
 }
 
-.el-button--primary.is-link{
-    --el-button-text-color: #007AFF; 
+.el-button--primary.is-link {
+    --el-button-text-color: #007AFF;
     --el-button-hover-text-color: #3395FF;
 }
 
@@ -169,6 +169,10 @@ html {
     --el-button-active-border-color: #007AFF;
 
     --el-border-radius-base: 2px;
+}
+
+.el-main {
+    --el-main-padding: 10px;
 }
 
 .el-input {
@@ -186,53 +190,66 @@ html {
 .el-table {
     --el-border-color-lighter: #BFDEFF;
     --el-table-header-bg-color: #E0EFFF;
-    --el-table-row-hover-bg-color: #E0EFFF;
 }
 
-.el-table .el-table__cell{
+/* 修改斑马线表格的背景 */
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+    background: #F0F7FF !important;
+}
+
+/* 修改hover */
+
+.el-table__body tr.hover-row.current-row>td.el-table__cell,
+.el-table__body tr.hover-row.el-table__row--striped.current-row>td.el-table__cell,
+.el-table__body tr.hover-row.el-table__row--striped>td.el-table__cell,
+.el-table__body tr.hover-row>td.el-table__cell {
+    background-color: #E0EFFF !important;
+}
+
+.el-table .el-table__cell {
     padding: 5px 0;
 }
 
-.el-table .el-table__body tr.el-table__row--striped td.el-table__cell {
+/* .el-table .el-table__body tr.el-table__row--striped td.el-table__cell {
     background: #F0F7FF;
-}
+} */
 
-.el-pagination{
+.el-pagination {
     --el-pagination-hover-color: #3395FF;
 }
 
-.el-pager li{
+.el-pager li {
     border: 1px #BFBFBF solid;
 }
 
-.el-pagination.is-background .el-pager li{
+.el-pagination.is-background .el-pager li {
     background: #fff;
 }
 
-.el-pagination.is-background .el-pager li.is-active{
+.el-pagination.is-background .el-pager li.is-active {
     border: #007AFF;
 }
 
-.el-pagination--small .btn-next{
+.el-pagination--small .btn-next {
     border: 1px #BFBFBF solid;
 }
 
-.el-pagination--small .btn-prev{
+.el-pagination--small .btn-prev {
     border: 1px #BFBFBF solid;
 }
 
-.el-pagination.is-background .btn-next{
+.el-pagination.is-background .btn-next {
     background-color: #fff;
 }
 
-.el-pagination.is-background .btn-prev{
+.el-pagination.is-background .btn-prev {
     background-color: #fff;
 }
 
-.el-pagination.is-background .btn-prev:disabled{
+.el-pagination.is-background .btn-prev:disabled {
     background-color: #fff;
 }
 
-.el-pagination.is-background .btn-next:disabled{
+.el-pagination.is-background .btn-next:disabled {
     background-color: #fff;
 }

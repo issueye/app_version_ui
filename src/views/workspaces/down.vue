@@ -42,13 +42,13 @@
             <el-table-column fixed="right" label="操作" width="110" align="center">
                 <template #default="props">
                     <el-button link type="primary" size="small" @click="downClick(props.row)">下载</el-button>
-                    <el-button link type="primary" size="small" @click="removeClick(props.row)">移除</el-button>
+                    <el-button link type='danger' size="small" @click="removeClick(props.row)">移除</el-button>
                 </template>
             </el-table-column>
         </el-table>
         <div class="pagination-box">
-            <el-pagination small background layout="prev, pager, next" :current-page="current" :total="total"
-                @current-change="currentChange" />
+            <el-pagination small background layout="->, slot, total, prev, pager, next, jumper" :current-page="current"
+                :total="total" @current-change="currentChange" />
         </div>
     </div>
 </template>

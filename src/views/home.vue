@@ -9,7 +9,7 @@
                 <el-main class="main-box">
                     <div class="contaier-box" id="versionContaierBox">
                         <div class="left-box">
-                            <RepoMana  />
+                            <RepoMana />
                         </div>
                         <div class="right-box">
                             <Workspaces />
@@ -30,20 +30,20 @@ import imgUrl from '../assets/icon.png'
 </script>
 
 <style scoped>
-
-.contaier-box{
-    border: 1px #DCDFE6 solid;
+.contaier-box {
+    /* border: 1px #DCDFE6 solid; */
     height: 100%;
+    background-color: #fff;
 }
 
-.left-box{
+.left-box {
     float: left;
-    width: 450px;
+    width: 500px;
     height: 100%;
     border-right: 1px #DCDFE6 solid;
 }
 
-.right-box{
+.right-box {
     overflow: hidden;
 }
 
@@ -53,6 +53,7 @@ import imgUrl from '../assets/icon.png'
     left: 0;
     width: 100%;
     height: 100%;
+    background-color: #e9eaec;
 }
 
 .home-header {
@@ -63,12 +64,12 @@ import imgUrl from '../assets/icon.png'
     background: #256CFD;
 }
 
-.header-title-box{
+.header-title-box {
     font-size: larger;
     color: #fff;
 }
 
-.header-logo{
+.header-logo {
     height: 25px;
     width: 25px;
     margin-right: 10px;
@@ -79,8 +80,7 @@ import imgUrl from '../assets/icon.png'
 }
 
 
-.page-box{
+.page-box {
     border: 1px #DCDFE6 solid;
 }
-
 </style>

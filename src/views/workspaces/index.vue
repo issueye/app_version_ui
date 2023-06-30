@@ -5,8 +5,8 @@
                 <span class="board-box">.</span> {{ project_name }}
             </div>
             <div>
-                <el-button type="primary" @click="refreshClick">刷新分支列表</el-button>
-                <el-button type="primary" @click="appTreeClick">查看迭代内容</el-button>
+                <el-button type="primary" @click="refreshClick">刷新分支</el-button>
+                <el-button type="primary" @click="appTreeClick">迭代内容</el-button>
                 <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
                 <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
                 <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
@@ -55,8 +55,8 @@
                 </el-table-column>
             </el-table>
             <div class="pagination-box">
-                <el-pagination small background layout="->, slot, total, prev, pager, next, jumper" :current-page="current" :total="detailForm.total"
-                    @current-change="currentChange" />
+                <el-pagination small background layout="->, slot, total, prev, pager, next, jumper" :current-page="current"
+                    :total="detailForm.total" @current-change="currentChange" />
             </div>
         </div>
     </div>
@@ -282,7 +282,7 @@ const viewInfoClick = (row) => {
 .board-box {
     display: inline-block;
     background: #007AFF;
-    width: 10px;
+    width: 5px;
     height: 32px;
     color: #007AFF;
 }
@@ -300,4 +300,5 @@ const viewInfoClick = (row) => {
     margin-top: 30px;
     margin-left: 10px;
     margin-right: 10px;
-}</style>
+}
+</style>

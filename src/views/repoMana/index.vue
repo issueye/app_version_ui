@@ -9,7 +9,7 @@
         <div class="table-content-box">
             <!-- 表格数据 -->
             <el-table :data="tableData" border height="81vh" stripe style="width: 100%" @row-click="handleRowClick">
-                <el-table-column fixed prop="project_name" label="项目名称" width="200" />
+                <el-table-column fixed prop="project_name" label="项目名称" width="160" />
                 <el-table-column prop="server_name" label="服务名称" width="200" />
                 <el-table-column prop="repo_url" label="仓库地址" min-width="300" show-overflow-tooltip />
                 <el-table-column prop="create_at" label="创建时间" width="230" />
