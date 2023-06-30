@@ -4,7 +4,7 @@
             <el-form :model="detailForm" label-width="75px">
                 <el-row>
                     <el-col :span="12">
-                        <el-form-item label="发布类型">
+                        <el-form-item label="发布类型:">
                             <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
                                 <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
@@ -12,7 +12,7 @@
                         </el-form-item>
                     </el-col>
                     <el-col :span="12">
-                        <el-form-item label="分支">
+                        <el-form-item label="分支:">
                             <el-select v-model="detailForm.branch" :clearable="true" placeholder="请选择分支"
                                 @change="branchChange">
                                 <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"

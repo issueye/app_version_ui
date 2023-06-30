@@ -18,7 +18,7 @@
             <el-form :model="detailForm" label-width="75px">
                 <el-row>
                     <el-col :span="5">
-                        <el-form-item label="发布类型">
+                        <el-form-item label="发布类型:">
                             <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
                                 <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                     :value="item.value" />
@@ -26,7 +26,7 @@
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
-                        <el-form-item label="分支">
+                        <el-form-item label="分支:">
                             <el-select v-model="detailForm.branch" :clearable="true" placeholder="请选择分支"
                                 @change="branchChange">
                                 <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
@@ -36,32 +36,34 @@
                     </el-col>
                 </el-row>
             </el-form>
-        </div>
-        <!-- 明细表格 -->
-        <el-table :data="tableData" border stripe style="width: 100%" height="70vh">
-            <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
-            <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
-            <el-table-column prop="tag" label="TAG" width="120" />
-            <el-table-column prop="create_at" label="创建时间" width="230" />
-            <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
-            <el-table-column prop="branch" label="分支" width="150" show-overflow-tooltip />
-            <el-table-column prop="commit_hash" label="提交HASH" width="300" show-overflow-tooltip />
-            <el-table-column fixed="right" label="操作" width="150" align="center">
-                <template #default="props">
-                    <el-button link type="primary" size="small" @click="removeVersionClick(props.row)">移除</el-button>
-                    <el-button link type="primary" size="small" @click="viewInfoClick(props.row)">查看</el-button>
-                    <el-button link type="primary" size="small" @click="appCompileClick(props.row)">编译</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-        <div class="pagination-box">
-            <el-pagination small background layout="prev, pager, next" :current-page="current" :total="detailForm.total"
-                @current-change="currentChange" />
+
+            <!-- 明细表格 -->
+            <el-table :data="tableData" border stripe style="width: 100%" height="72vh">
+                <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
+                <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
+                <el-table-column prop="tag" label="TAG" width="120" />
+                <el-table-column prop="create_at" label="创建时间" width="230" />
+                <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
+                <el-table-column prop="branch" label="分支" width="150" show-overflow-tooltip />
+                <el-table-column prop="commit_hash" label="提交HASH" width="300" show-overflow-tooltip />
+                <el-table-column fixed="right" label="操作" width="150" align="center">
+                    <template #default="props">
+                        <el-button link type="primary" size="small" @click="viewInfoClick(props.row)">查看</el-button>
+                        <el-button link type="primary" size="small" @click="appCompileClick(props.row)">编译</el-button>
+                        <el-button link type="danger" size="small" @click="removeVersionClick(props.row)">移除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <div class="pagination-box">
+                <el-pagination small background layout="->, slot, total, prev, pager, next, jumper" :current-page="current" :total="detailForm.total"
+                    @current-change="currentChange" />
+            </div>
         </div>
     </div>
 
     <!-- 版本信息 -->
-    <el-dialog :title="versionTitle" v-model="versionDialogVisible" :close-on-click-modal="false" destroy-on-close top="5px" width="40%">
+    <el-dialog :title="versionTitle" v-model="versionDialogVisible" :close-on-click-modal="false" destroy-on-close top="5px"
+        width="40%">
         <VersionEdit @visible="versionEditClose" />
     </el-dialog>
     <!-- 编辑运行脚本 -->
@@ -73,11 +75,13 @@
         <CompileEdit />
     </el-dialog>
     <!-- 下载程序 -->
-    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" width="55%" :destroy-on-close="true">
+    <el-dialog title="程序管理" v-model="downDialogVisible" :close-on-click-modal="false" top="5px" width="55%"
+        :destroy-on-close="true">
         <Down />
     </el-dialog>
     <!-- 更新树 -->
-    <el-dialog title="迭代记录" v-model="treeDialogVisible" :close-on-click-modal="false" top="5px" width="40%" :destroy-on-close="true">
+    <el-dialog title="迭代记录" v-model="treeDialogVisible" :close-on-click-modal="false" top="5px" width="40%"
+        :destroy-on-close="true">
         <TimeTree />
     </el-dialog>
 </template>
@@ -97,12 +101,13 @@ import useRepoInfoStore from '../../store/repoInfo';
 import useVersionInfoStore from '../../store/versionInfo';
 import { storeToRefs } from 'pinia';
 
+
 // 仓库状态管理
 let repoInfoStore = useRepoInfoStore();
 let versionInfoStore = useVersionInfoStore();
 
 const { id, project_name, branchOptions, tagOptions } = storeToRefs(repoInfoStore);
-const {versionDialogType, tableData, detailForm } = storeToRefs(versionInfoStore);
+const { versionDialogType, tableData, detailForm } = storeToRefs(versionInfoStore);
 
 const versionDialogVisible = ref(false)         // 添加版本弹窗  addVersionDialogVisible
 const versionTitle = ref('添加版本')             // 弹窗标题
@@ -119,6 +124,8 @@ const versionEditClose = () => {
     versionDialogVisible.value = false
     getData()
 }
+
+
 
 // 编辑器关闭时
 const editCodeClose = () => {
@@ -168,7 +175,7 @@ const branchChange = (val) => {
 
 // 获取版本列表
 const getData = () => {
-    detailForm.pageNum = current.value
+    versionInfoStore.detailForm.pageNum = current.value
     versionInfoStore.getData()
 }
 
@@ -177,6 +184,7 @@ getData()
 // 分页
 const currentChange = (val) => {
     current.value = val
+    versionInfoStore.detailForm.pageNum = val
     getData()
 }
 
@@ -263,6 +271,8 @@ const viewInfoClick = (row) => {
 .header-box {
     display: flex;
     justify-content: space-between;
+    margin: 0 10px;
+    margin-top: 10px;
 }
 
 .project-name-box {
@@ -271,10 +281,10 @@ const viewInfoClick = (row) => {
 
 .board-box {
     display: inline-block;
-    background: #1a94bc;
-    width: 5px;
-    height: 30px;
-    color: #1a94bc;
+    background: #007AFF;
+    width: 10px;
+    height: 32px;
+    color: #007AFF;
 }
 
 .pagination-box {
@@ -288,5 +298,6 @@ const viewInfoClick = (row) => {
 
 .content-detail-box {
     margin-top: 30px;
-}
-</style>
+    margin-left: 10px;
+    margin-right: 10px;
+}</style>

@@ -106,10 +106,6 @@ html {
     visibility: hidden;
 }
 
-.clearfix {
-    *zoom: 1;
-}
-
 .el-card{
     --el-card-padding: 10px;
 }
@@ -121,7 +117,7 @@ html {
 
 
 .el-dialog__header {
-    background: #1a94bc;
+    background: #256CFD;
     margin-right: 0px;
     padding-bottom: 10px;
 }
@@ -146,29 +142,97 @@ html {
 
 /* button--primary */
 .el-button--primary {
-    --el-button-bg-color: #1a94bc;
-    --el-button-border-color: #1a94bc;
-    --el-button-hover-bg-color: #5cb3cc;
+    --el-button-bg-color: #007AFF;
+    --el-button-border-color: #007AFF;
+    --el-button-hover-bg-color: #3395FF;
     --el-button-hover-text-color: #fff;
-    --el-button-hover-border-color: #5cb3cc;
+    --el-button-hover-border-color: #3395FF;
     /* 158bb8 选中时颜色 */
-    --el-button-active-bg-color: #158bb8;
+    --el-button-active-bg-color: #007AFF;
     --el-button-active-text-color: #fff;
-    --el-button-active-border-color: #158bb8;
+    --el-button-active-border-color: #007AFF;
 
-    --el-button-disabled-bg-color: #3fa7d0;
-    --el-button-disabled-border-color: #3fa7d0;
+    --el-button-disabled-bg-color: #007AFF;
+    --el-button-disabled-border-color: #007AFF;
 
     
 }
 
 .el-button--primary.is-link{
-    --el-button-text-color: #1a94bc; 
-    --el-button-hover-text-color: #5cb3cc;
+    --el-button-text-color: #007AFF; 
+    --el-button-hover-text-color: #3395FF;
 }
 
 .el-button {
     --el-button-hover-text-color: #fff;
-    --el-button-hover-border-color: #95d8ea;
-    --el-button-active-border-color: #158bb8;
+    --el-button-hover-border-color: #3395FF;
+    --el-button-active-border-color: #007AFF;
+
+    --el-border-radius-base: 2px;
+}
+
+.el-input {
+    --el-border-radius-base: 2px;
+}
+
+.el-form-item__label {
+    --el-text-color-regular: #262626;
+}
+
+.el-table thead {
+    color: #262626;
+}
+
+.el-table {
+    --el-border-color-lighter: #BFDEFF;
+    --el-table-header-bg-color: #E0EFFF;
+    --el-table-row-hover-bg-color: #E0EFFF;
+}
+
+.el-table .el-table__cell{
+    padding: 5px 0;
+}
+
+.el-table .el-table__body tr.el-table__row--striped td.el-table__cell {
+    background: #F0F7FF;
+}
+
+.el-pagination{
+    --el-pagination-hover-color: #3395FF;
+}
+
+.el-pager li{
+    border: 1px #BFBFBF solid;
+}
+
+.el-pagination.is-background .el-pager li{
+    background: #fff;
+}
+
+.el-pagination.is-background .el-pager li.is-active{
+    border: #007AFF;
+}
+
+.el-pagination--small .btn-next{
+    border: 1px #BFBFBF solid;
+}
+
+.el-pagination--small .btn-prev{
+    border: 1px #BFBFBF solid;
+}
+
+.el-pagination.is-background .btn-next{
+    background-color: #fff;
+}
+
+.el-pagination.is-background .btn-prev{
+    background-color: #fff;
+}
+
+.el-pagination.is-background .btn-prev:disabled{
+    background-color: #fff;
+}
+
+.el-pagination.is-background .btn-next:disabled{
+    background-color: #fff;
 }

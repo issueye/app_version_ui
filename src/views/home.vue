@@ -7,18 +7,14 @@
             </el-header>
             <el-container>
                 <el-main class="main-box">
-                    <el-row class="page-box">
-                        <el-col :span="10">
-                            <div class="repo-box">
-                                <RepoMana  />
-                            </div>
-                        </el-col>
-                        <el-col :span="14">
-                            <div class="workspaces-box">
-                                <Workspaces />
-                            </div>
-                        </el-col>
-                    </el-row>
+                    <div class="contaier-box" id="versionContaierBox">
+                        <div class="left-box">
+                            <RepoMana  />
+                        </div>
+                        <div class="right-box">
+                            <Workspaces />
+                        </div>
+                    </div>
                 </el-main>
             </el-container>
         </el-container>
@@ -26,7 +22,6 @@
 </template>
 
 <script setup name="home">
-import { ref } from 'vue'
 
 import RepoMana from './repoMana/index.vue'
 import Workspaces from './workspaces/index.vue'
@@ -36,15 +31,20 @@ import imgUrl from '../assets/icon.png'
 
 <style scoped>
 
-.repo-box{
-    padding: 10px;
-    height: 88vh;
+.contaier-box{
+    border: 1px #DCDFE6 solid;
+    height: 100%;
+}
+
+.left-box{
+    float: left;
+    width: 450px;
+    height: 100%;
     border-right: 1px #DCDFE6 solid;
 }
 
-/* 版本管理 */
-.workspaces-box{
-    padding: 10px;
+.right-box{
+    overflow: hidden;
 }
 
 .home-warp {
@@ -60,7 +60,7 @@ import imgUrl from '../assets/icon.png'
     display: flex;
     align-items: center;
     height: 40px;
-    background: #1a94bc;
+    background: #256CFD;
 }
 
 .header-title-box{
@@ -69,8 +69,8 @@ import imgUrl from '../assets/icon.png'
 }
 
 .header-logo{
-    height: 30px;
-    width: 30px;
+    height: 25px;
+    width: 25px;
     margin-right: 10px;
 }
 
@@ -78,21 +78,9 @@ import imgUrl from '../assets/icon.png'
     height: 100%;
 }
 
-.main-button-menu {
-    /* border: #DCDFE6 1px solid; */
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.content-box-tab {
-    height: 90%;
-}
 
 .page-box{
     border: 1px #DCDFE6 solid;
 }
 
-.box-card-button {
-    margin-top: 20px;
-}
 </style>

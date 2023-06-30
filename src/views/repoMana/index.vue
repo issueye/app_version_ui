@@ -1,5 +1,5 @@
 <template>
-    <div class="content-box">
+    <div>
         <div class="header-button-box">
             <el-button type="primary" @click="addRepoClick">添加仓库</el-button>
         </div>
@@ -8,7 +8,7 @@
         <!-- 表格数据 -->
         <div class="table-content-box">
             <!-- 表格数据 -->
-            <el-table :data="tableData" border height="80vh" stripe style="width: 100%" @row-click="handleRowClick">
+            <el-table :data="tableData" border height="81vh" stripe style="width: 100%" @row-click="handleRowClick">
                 <el-table-column fixed prop="project_name" label="项目名称" width="200" />
                 <el-table-column prop="server_name" label="服务名称" width="200" />
                 <el-table-column prop="repo_url" label="仓库地址" min-width="300" show-overflow-tooltip />
@@ -17,7 +17,7 @@
                     <template #default="props">
                         <el-button link type="primary" size="small"
                             @click.native.close="editClick(props.row)">编辑</el-button>
-                        <el-button link type="primary" size="small" @click="removeRepoClick(props.row)">移除</el-button>
+                        <el-button link type="danger" size="small" @click="removeRepoClick(props.row)">移除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -27,23 +27,23 @@
     <!-- 添加编辑仓库信息 -->
     <el-dialog top="5px" v-model="repoVisible" width="40%" :close-on-click-modal="false" :title="repoTitle">
         <div class="repo-dialog-box">
-            <el-form :model="form" label-width="80px">
-                <el-form-item label="项目名称">
+            <el-form :model="form" label-width="100px" :rules="rules" ref="ruleFormRef">
+                <el-form-item label="项目名称:" prop="project_name">
                     <el-input v-model="form.project_name" />
                 </el-form-item>
-                <el-form-item label="服务名称">
+                <el-form-item label="服务名称:" prop="server_name">
                     <el-input v-model="form.server_name" />
                 </el-form-item>
-                <el-form-item label="仓库地址">
+                <el-form-item label="仓库地址:" prop="repo_url">
                     <el-input v-model="form.repo_url" />
                 </el-form-item>
-                <el-form-item label="代理地址">
+                <el-form-item label="代理地址:">
                     <el-input v-model="form.proxy_url" />
                 </el-form-item>
-                <el-form-item label="代理用户">
+                <el-form-item label="代理用户:">
                     <el-input v-model="form.proxy_user" />
                 </el-form-item>
-                <el-form-item label="代理密码">
+                <el-form-item label="代理密码:">
                     <el-input v-model="form.proxy_pwd" />
                 </el-form-item>
             </el-form>
@@ -56,12 +56,10 @@
 </template>
 
 <script setup name="repoMana">
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 import {
-    apiRepoCreate,
     apiRepoDel,
     apiRepoList,
-    apiRepoModify,
 } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
 import useRepoInfoStore from "../../store/repoInfo";
@@ -87,6 +85,14 @@ const getData = async () => {
         tableData.value = data.data;
     }
 };
+
+const ruleFormRef = ref(null)
+
+const rules = reactive({
+    project_name: [{ required: true, message: '项目名称不能为空', trigger: 'blur' },],
+    server_name: [{ required: true, message: '服务名称不能为空', trigger: 'blur' },],
+    repo_url: [{ required: true, message: '代码仓库地址不能为空', trigger: 'blur' },],
+})
 
 // 打开获取仓库列表
 getData();
@@ -114,19 +120,23 @@ const removeRepoClick = async (row) => {
 
 // 保存信息
 const repoSaveClick = async () => {
-    if (operationType.value == 0) {
-        // 如果创建成功则关闭窗口
-        if (repoInfoStore.create()) {
-            repoVisible.value = false;
-            getData();
+    ruleFormRef.value.validate((valid) => {
+        if (valid) {
+            if (operationType.value == 0) {
+                // 如果创建成功则关闭窗口
+                if (repoInfoStore.create()) {
+                    repoVisible.value = false;
+                    getData();
+                }
+            } else {
+                // 如果创建成功则关闭窗口
+                if (repoInfoStore.modify()) {
+                    repoVisible.value = false;
+                    getData();
+                }
+            }
         }
-    } else {
-        // 如果创建成功则关闭窗口
-        if (repoInfoStore.modify()) {
-            repoVisible.value = false;
-            getData();
-        }
-    }
+    })
 };
 
 // 编辑仓库按钮
@@ -150,7 +160,8 @@ const addRepoClick = () => {
 <style scoped>
 /* 添加仓库 */
 .header-button-box {
-    margin-bottom: 10px;
+    margin: 0 10px;
+    margin-top: 10px;
     text-align: end;
 }
 
@@ -161,6 +172,9 @@ const addRepoClick = () => {
 
 .table-content-box {
     margin-top: 30px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
 .repo-dialog-footer-box {

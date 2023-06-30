@@ -1,13 +1,13 @@
 <template>
     <div class="dialog-content-box">
-        <el-form :model="form" label-width="80px">
-            <el-form-item label="程序名称">
+        <el-form :model="form" label-width="100px" :rules="rules" ref="ruleFormRef">
+            <el-form-item label="程序名称:" prop="app_name">
                 <el-input disabled v-model="form.app_name" />
             </el-form-item>
 
             <el-row>
                 <el-col :span="14">
-                    <el-form-item label="发布版号">
+                    <el-form-item label="发布版号:" prop="version">
                         <el-input-number :disabled="versionDialogType == 1" v-model="form.version_x"
                             class="input-number-version" :min="form.min_x" controls-position="right" />
                         <el-input-number :disabled="versionDialogType == 1" v-model="form.version_y"
@@ -17,7 +17,7 @@
                     </el-form-item>
                 </el-col>
                 <el-col :span="10">
-                    <el-form-item label="发布类型">
+                    <el-form-item label="发布类型:" prop="tag">
                         <el-select :disabled="versionDialogType == 1" v-model="form.tag" placeholder="请选择 tag">
                             <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
                                 :value="item.value" />
@@ -26,22 +26,22 @@
                 </el-col>
             </el-row>
 
-            <el-form-item label="分支">
+            <el-form-item label="分支:" prop="branch">
                 <el-select :disabled="versionDialogType == 1" v-model="form.branch" placeholder="请选择分支"
                     @change="branchChange">
                     <el-option v-for="item in branchOptions" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
-            <el-form-item label="提交hash">
+            <el-form-item label="提交hash:" prop="commit_hash">
                 <el-input disabled v-model="form.commit_hash" />
             </el-form-item>
-            <el-form-item label="发布内容">
+            <el-form-item label="发布内容:" prop="content">
                 <el-input type="textarea" :rows="15" v-model="form.content" :readonly="versionDialogType == 1" />
             </el-form-item>
         </el-form>
 
         <!-- 按钮 -->
-        <div class="button-group-box">
+        <div class="button-group-box" v-if="versionDialogType == 0">
             <el-button type="primary" @click="saveVersionDataClick">保存</el-button>
             <el-button @click="cancelVersionClick">取消</el-button>
         </div>
@@ -64,9 +64,20 @@ let repoInfoStore = useRepoInfoStore()
 let versionInfoStore = useVersionInfoStore();
 
 let { id, server_name, tagOptions, branchOptions, branchData } = storeToRefs(repoInfoStore)
-const {id: versionId, versionDialogType } = storeToRefs(versionInfoStore);
+const { id: versionId, versionDialogType } = storeToRefs(versionInfoStore);
 
 const emits = defineEmits(['visible'])
+
+const ruleFormRef = ref(null)
+
+const rules = reactive({
+    app_name: [{ required: true, message: '程序名称不能为空', trigger: 'blur' }],
+    tag: [{ required: true, message: '发布类型不能为空', trigger: 'blur' }],
+    branch: [{ required: true, message: '分支不能为空', trigger: 'blur' }],
+    commit_hash: [{ required: true, message: '提交commit不能为空', trigger: 'blur' }],
+    content: [{ required: true, message: '提交内容不能为空', trigger: 'blur' }],
+    version: [{ required: true, message: '版本不能为空', trigger: 'blur' }],
+})
 
 // 版本表单信息
 const form = reactive({
@@ -149,7 +160,9 @@ const branchChange = async (val) => {
 
     // 处理提交 hash
     branchData.value.find((item) => {
-        if (item.short_name == val) {
+        let data = item.short_name.split('/')
+        let value = data[data.length - 1]
+        if (value == val) {
             form.commit_hash = item.hash
             return
         }
@@ -174,21 +187,26 @@ const branchChange = async (val) => {
 }
 
 // 保存数据按钮
-const saveVersionDataClick = async () => {
-    let { data } = await apiVersionCreate(form)
-    if (data.code == 200) {
-        ElMessage({
-            type: 'success',
-            message: data.message,
-        })
+const saveVersionDataClick = () => {
 
-        cancelVersionClick()
-    } else {
-        ElMessage({
-            type: 'error',
-            message: data.message,
-        })
-    }
+    ruleFormRef.value.validate(async (valid) => {
+        if (valid) {
+            let { data } = await apiVersionCreate(form)
+            if (data.code == 200) {
+                ElMessage({
+                    type: 'success',
+                    message: data.message,
+                })
+
+                cancelVersionClick()
+            } else {
+                ElMessage({
+                    type: 'error',
+                    message: data.message,
+                })
+            }
+        }
+    })
 }
 
 // 重置表单
