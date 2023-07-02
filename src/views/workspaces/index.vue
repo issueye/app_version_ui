@@ -148,18 +148,11 @@ const editCodeClick = () => {
 
 // 添加版本
 const handleAddVersionClick = () => {
-    // 没有选择中
-    if (id.value == '') {
-        ElMessage({
-            type: 'warning',
-            message: '请选择仓库',
-        })
-        return
+    if (checkRepo()) {
+        versionDialogType.value = 0
+        versionTitle.value = '添加版本'
+        versionDialogVisible.value = true
     }
-
-    versionDialogType.value = 0
-    versionTitle.value = '添加版本'
-    versionDialogVisible.value = true
 }
 
 // tag 发生变化时
@@ -216,36 +209,38 @@ const removeVersionClick = (row) => {
     })
 }
 
+const checkRepo = () => {
+    // 没有选择中
+    if (id.value == '') {
+        ElMessage({
+            type: 'warning',
+            message: '请选择仓库',
+        })
+        return false
+    } else {
+        return true
+    }
+}
+
 // 刷新分支列表
 const refreshClick = () => {
-    repoInfoStore.reFreshBranch()
+    if (checkRepo()) {
+        repoInfoStore.reFreshBranch()
+    }
 }
 
 // 时间树
 const appTreeClick = () => {
-    // 没有选择中
-    if (id.value == '') {
-        ElMessage({
-            type: 'warning',
-            message: '请选择仓库',
-        })
-        return
+    if (checkRepo()) {
+        treeDialogVisible.value = true
     }
-
-    treeDialogVisible.value = true
 }
 
 // 程序下载
 const appDownloadClick = () => {
-    // 没有选择中
-    if (id.value == '') {
-        ElMessage({
-            type: 'warning',
-            message: '请选择仓库',
-        })
-        return
+    if (checkRepo()) {
+        downDialogVisible.value = true
     }
-    downDialogVisible.value = true
 }
 
 // 弹窗程序

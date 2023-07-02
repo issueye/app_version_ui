@@ -7,7 +7,7 @@
             </el-header>
             <el-container>
                 <el-main class="main-box">
-                    <div class="contaier-box" id="versionContaierBox">
+                    <div class="contaier-box">
                         <div class="left-box">
                             <RepoMana />
                         </div>
