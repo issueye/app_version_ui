@@ -1,63 +1,60 @@
 <template>
-    <div class="content-box">
-        <div class="header-box">
-            <div class="project-name-box">
-                <span class="board-box">.</span> {{ project_name }}
-            </div>
-            <div>
-                <el-button type="primary" @click="refreshClick">刷新分支</el-button>
-                <el-button type="primary" @click="appTreeClick">迭代内容</el-button>
-                <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
-                <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
-                <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
-            </div>
+    <div class="header-box">
+        <div class="project-name-box">
+            <span class="board-box">.</span> {{ project_name }}
         </div>
-        <el-divider class="header-divider" />
-        <!-- 版本内容 -->
-        <div class="content-detail-box">
-            <el-form :model="detailForm" label-width="75px">
-                <el-row>
-                    <el-col :span="5">
-                        <el-form-item label="发布类型:">
-                            <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
-                                <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
-                                    :value="item.value" />
-                            </el-select>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="8">
-                        <el-form-item label="分支:">
-                            <el-select v-model="detailForm.branch" :clearable="true" placeholder="请选择分支"
-                                @change="branchChange">
-                                <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
-                                    :value="item.value" />
-                            </el-select>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-            </el-form>
+        <div>
+            <el-button type="primary" @click="refreshClick">刷新分支</el-button>
+            <el-button type="primary" @click="appTreeClick">迭代内容</el-button>
+            <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
+            <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
+            <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
+        </div>
+    </div>
+    <el-divider class="header-divider" />
+    <!-- 版本内容 -->
+    <div class="content-detail-box">
+        <el-form :model="detailForm" label-width="75px">
+            <el-row>
+                <el-col :span="5">
+                    <el-form-item label="发布类型:">
+                        <el-select v-model="detailForm.tag" :clearable="true" placeholder="请选择 tag" @change="tagChange">
+                            <el-option v-for="item in tagOptions" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                    <el-form-item label="分支:">
+                        <el-select v-model="detailForm.branch" :clearable="true" placeholder="请选择分支" @change="branchChange">
+                            <el-option v-for="item in branchOptions" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </el-form-item>
+                </el-col>
+            </el-row>
+        </el-form>
 
-            <!-- 明细表格 -->
-            <el-table :data="tableData" border stripe style="width: 100%" height="72vh">
-                <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
-                <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
-                <el-table-column prop="tag" label="TAG" width="120" />
-                <el-table-column prop="create_at" label="创建时间" width="230" />
-                <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
-                <el-table-column prop="branch" label="分支" width="150" show-overflow-tooltip />
-                <el-table-column prop="commit_hash" label="提交HASH" width="300" show-overflow-tooltip />
-                <el-table-column fixed="right" label="操作" width="150" align="center">
-                    <template #default="props">
-                        <el-button link type="primary" size="small" @click="viewInfoClick(props.row)">查看</el-button>
-                        <el-button link type="primary" size="small" @click="appCompileClick(props.row)">编译</el-button>
-                        <el-button link type="danger" size="small" @click="removeVersionClick(props.row)">移除</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <div class="pagination-box">
-                <el-pagination small background layout="->, slot, total, prev, pager, next, jumper" :current-page="current"
-                    :total="detailForm.total" @current-change="currentChange" />
-            </div>
+        <!-- 明细表格 -->
+        <el-table :data="tableData" border stripe style="width: 100%">
+            <el-table-column fixed prop="app_name" label="名称" width="300" show-overflow-tooltip />
+            <el-table-column prop="version" label="版本" width="200" show-overflow-tooltip />
+            <el-table-column prop="tag" label="TAG" width="120" />
+            <el-table-column prop="create_at" label="创建时间" width="230" />
+            <el-table-column prop="content" label="内容" min-width="300" show-overflow-tooltip />
+            <el-table-column prop="branch" label="分支" width="150" show-overflow-tooltip />
+            <el-table-column prop="commit_hash" label="提交HASH" width="300" show-overflow-tooltip />
+            <el-table-column fixed="right" label="操作" width="150" align="center">
+                <template #default="props">
+                    <el-button link type="primary" size="small" @click="viewInfoClick(props.row)">查看</el-button>
+                    <el-button link type="primary" size="small" @click="appCompileClick(props.row)">编译</el-button>
+                    <el-button link type="danger" size="small" @click="removeVersionClick(props.row)">移除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div class="pagination-box">
+            <el-pagination small background layout="->, slot, total, prev, pager, next, jumper" :current-page="current"
+                :total="detailForm.total" @current-change="currentChange" />
         </div>
     </div>
 
@@ -270,6 +267,10 @@ const viewInfoClick = (row) => {
     margin-top: 10px;
 }
 
+.el-table {
+    height: calc(100% - 93px);
+}
+
 .project-name-box {
     font-size: 20px;
 }
@@ -295,5 +296,6 @@ const viewInfoClick = (row) => {
     margin-top: 30px;
     margin-left: 10px;
     margin-right: 10px;
+    height: calc(100% - 84px);
 }
 </style>

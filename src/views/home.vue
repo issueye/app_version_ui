@@ -34,17 +34,19 @@ import imgUrl from '../assets/icon.png'
     /* border: 1px #DCDFE6 solid; */
     height: 100%;
     background-color: #fff;
+    display: flex;
+    justify-content: space-between;
 }
 
 .left-box {
     float: left;
-    width: 500px;
+    width: 25%;
     height: 100%;
     border-right: 1px #DCDFE6 solid;
 }
 
 .right-box {
-    overflow: hidden;
+    width: 75%;
 }
 
 .home-warp {

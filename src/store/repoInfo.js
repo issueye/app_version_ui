@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
-import { apiBranchList, apiBranchRefresh, apiRepoCreate, apiRepoModify, apiRepoList } from '../api/repo'
+import { apiBranchList, apiBranchRefresh, apiRepoCreate, apiRepoModify, apiRepoList, apiRepoDel } from '../api/repo'
 import { ArrObjItemDedup } from '../utils/utils'
 import useVersionInfoStore from './versionInfo';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 
 // 仓库状态
 const repoInfoStore = defineStore('repoInfo', {
@@ -13,7 +13,7 @@ const repoInfoStore = defineStore('repoInfo', {
             project_name: '',   // 仓库名称
             server_name: '',    // 服务名称
             repo_url: '',       // 仓库地址
-            createa_at: '',     // 创建时间
+            create_at: '',      // 创建时间
 
             // 分支列表
             branchOptions: [],
@@ -28,6 +28,9 @@ const repoInfoStore = defineStore('repoInfo', {
             branchData: [],
             // 表格数据
             tableData: [],
+            qryForm: {
+                condition: '',
+            },
             // 表单
             form: {
                 id: '',
@@ -54,7 +57,7 @@ const repoInfoStore = defineStore('repoInfo', {
             this.project_name = data.project_name
             this.server_name = data.server_name
             this.repo_url = data.repo_url
-            this.createa_at = data.createa_at
+            this.create_at = data.create_at
 
             let versionInfoStore = useVersionInfoStore();
             versionInfoStore.detailForm.repo_id = this.id
@@ -108,28 +111,53 @@ const repoInfoStore = defineStore('repoInfo', {
                     message: data.message,
                 })
 
+                this.getData()
                 return true
             }
         },
         // 修改
         async modify() {
             // 修改
-            let { data } = await apiRepoModify(form)
+            let { data } = await apiRepoModify(this.form)
             if (data.code == 200) {
                 ElMessage({
                     type: 'success',
                     message: data.message,
                 })
+
+                this.getData()
                 return true
             }
         },
         // 获取表格数据
         async getData() {
-            let { data } = await apiRepoList()
+            let { data } = await apiRepoList(this.qryForm)
             if (data.code == 200) {
-                this.tableData.value = data.data
+                console.log('getData => ', data.data);
+                this.tableData = data.data
             }
         },
+
+        remove(id) {
+            ElMessageBox.confirm("是否移除仓库", "警告", {
+                confirmButtonText: "确定",
+                cancelButtonText: "取消",
+                type: "warning",
+            })
+                .then(async () => {
+                    let { data } = await apiRepoDel(id);
+                    if (data.code == 200) {
+                        ElMessage({
+                            type: "success",
+                            message: data.message,
+                        });
+                    }
+                })
+                .finally(() => {
+                    this.getData();
+                });
+        },
+
         // 查看表格数据
         async viewData(row) {
             this.form.id = row.id

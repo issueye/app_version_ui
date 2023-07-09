@@ -129,9 +129,9 @@ const downClick = async (row) => {
     link.style.display = 'none'
     link.href = url;
 
-    let name = row.app_name
+    let name = `${row.app_name}_linux.zip`
     if (row.platform == 0) {
-        name += '.exe'
+        name = `${row.app_name}_windows.zip`
     }
 
     link.setAttribute('download', name)
