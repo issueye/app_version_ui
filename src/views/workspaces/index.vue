@@ -7,6 +7,7 @@
             <el-button type="primary" @click="refreshClick">刷新分支</el-button>
             <el-button type="primary" @click="appTreeClick">迭代内容</el-button>
             <el-button type="primary" @click="appDownloadClick">下载程序</el-button>
+            <el-button type="primary" @click="onBuildConfigClick">编译设置</el-button>
             <el-button type="primary" @click="editCodeClick">编辑脚本</el-button>
             <el-button type="primary" @click="handleAddVersionClick">添加版本</el-button>
         </div>
@@ -81,182 +82,190 @@
         :destroy-on-close="true">
         <TimeTree />
     </el-dialog>
+    <!-- 编译设置 -->
+    <el-dialog title="编译设置" v-model="buildConfigDialogVisible" :close-on-click-modal="false" top="5px" width="50%"
+        :destroy-on-close="true">
+        <BuildConfigEdit />
+    </el-dialog>
 </template>
 
 <script setup name="workspaces">
-import { reactive, ref } from "vue"
+import { reactive, ref } from "vue";
 
 import { apiVersionList, apiVersionRemove } from "../../api/repo";
 import { ElMessage, ElMessageBox } from "element-plus";
 import "codemirror/mode/javascript/javascript.js";
-import CodeEdit from './codeEdit.vue'
-import CompileEdit from './compileEdit.vue'
-import VersionEdit from './versionEdit.vue'
-import Down from './down.vue'
-import TimeTree from './timeTree.vue'
-import useRepoInfoStore from '../../store/repoInfo';
-import useVersionInfoStore from '../../store/versionInfo';
-import { storeToRefs } from 'pinia';
-
+import CodeEdit from "./codeEdit.vue";
+import CompileEdit from "./compileEdit.vue";
+import VersionEdit from "./versionEdit.vue";
+import BuildConfigEdit from "./buildConfigEdit.vue";
+import Down from "./down.vue";
+import TimeTree from "./timeTree.vue";
+import useRepoInfoStore from "../../store/repoInfo";
+import useVersionInfoStore from "../../store/versionInfo";
+import { storeToRefs } from "pinia";
 
 // 仓库状态管理
 let repoInfoStore = useRepoInfoStore();
 let versionInfoStore = useVersionInfoStore();
 
-const { id, project_name, branchOptions, tagOptions } = storeToRefs(repoInfoStore);
-const { versionDialogType, tableData, detailForm } = storeToRefs(versionInfoStore);
+const { id, project_name, branchOptions, tagOptions } =
+    storeToRefs(repoInfoStore);
+const { versionDialogType, tableData, detailForm } =
+    storeToRefs(versionInfoStore);
 
-const versionDialogVisible = ref(false)         // 添加版本弹窗  addVersionDialogVisible
-const versionTitle = ref('添加版本')             // 弹窗标题
-const codeEditVisible = ref(false)              // 代码编辑器显示
-const appDialogVisible = ref(false)             // 程序
-const downDialogVisible = ref(false)            // 下载
-const treeDialogVisible = ref(false)            // 时间树
+const versionDialogVisible = ref(false); // 添加版本弹窗  addVersionDialogVisible
+const versionTitle = ref("添加版本"); // 弹窗标题
+const codeEditVisible = ref(false); // 代码编辑器显示
+const appDialogVisible = ref(false); // 程序
+const downDialogVisible = ref(false); // 下载
+const treeDialogVisible = ref(false); // 时间树
+const buildConfigDialogVisible = ref(false); // 编译设置
 
 // 分页信息
-const current = ref(1)
+const current = ref(1);
 
 // 版本编辑弹窗关闭
 const versionEditClose = () => {
-    versionDialogVisible.value = false
-    getData()
-}
-
-
+    versionDialogVisible.value = false;
+    getData();
+};
 
 // 编辑器关闭时
 const editCodeClose = () => {
-    getData()
-}
+    getData();
+};
+
+// 编译设置
+const onBuildConfigClick = () => {
+    buildConfigDialogVisible.value = true
+};
 
 // 修改脚本
 const editCodeClick = () => {
     // 没有选择中
-    if (id.value == '') {
+    if (id.value == "") {
         ElMessage({
-            type: 'warning',
-            message: '请选择仓库',
-        })
-        return
+            type: "warning",
+            message: "请选择仓库",
+        });
+        return;
     }
 
-    codeEditVisible.value = true
-}
+    codeEditVisible.value = true;
+};
 
 // 添加版本
 const handleAddVersionClick = () => {
     if (checkRepo()) {
-        versionDialogType.value = 0
-        versionTitle.value = '添加版本'
-        versionDialogVisible.value = true
+        versionDialogType.value = 0;
+        versionTitle.value = "添加版本";
+        versionDialogVisible.value = true;
     }
-}
+};
 
 // tag 发生变化时
 const tagChange = (val) => {
-    detailForm.tag = val
-    getData()
-}
+    detailForm.tag = val;
+    getData();
+};
 
 const branchChange = (val) => {
-    detailForm.branch = val
-    getData()
-}
+    detailForm.branch = val;
+    getData();
+};
 
 // 获取版本列表
 const getData = () => {
-    versionInfoStore.detailForm.pageNum = current.value
-    versionInfoStore.getData()
-}
+    versionInfoStore.detailForm.pageNum = current.value;
+    versionInfoStore.getData();
+};
 
-getData()
+getData();
 
 // 分页
 const currentChange = (val) => {
-    current.value = val
-    versionInfoStore.detailForm.pageNum = val
-    getData()
-}
+    current.value = val;
+    versionInfoStore.detailForm.pageNum = val;
+    getData();
+};
 
 // 移除版本
 const removeVersionClick = (row) => {
-    ElMessageBox.confirm(
-        '是否移除版本',
-        '警告',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    ).then(async () => {
-        let { data } = await apiVersionRemove(row.id)
-        if (data.code == 200) {
-            ElMessage({
-                type: 'success',
-                message: data.message,
-            })
-        }
-    }).catch(() => {
-        ElMessage({
-            type: 'info',
-            message: '取消移除',
-        })
-    }).finally(() => {
-        getData()
+    ElMessageBox.confirm("是否移除版本", "警告", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
     })
-}
+        .then(async () => {
+            let { data } = await apiVersionRemove(row.id);
+            if (data.code == 200) {
+                ElMessage({
+                    type: "success",
+                    message: data.message,
+                });
+            }
+        })
+        .catch(() => {
+            ElMessage({
+                type: "info",
+                message: "取消移除",
+            });
+        })
+        .finally(() => {
+            getData();
+        });
+};
 
 const checkRepo = () => {
     // 没有选择中
-    if (id.value == '') {
+    if (id.value == "") {
         ElMessage({
-            type: 'warning',
-            message: '请选择仓库',
-        })
-        return false
+            type: "warning",
+            message: "请选择仓库",
+        });
+        return false;
     } else {
-        return true
+        return true;
     }
-}
+};
 
 // 刷新分支列表
 const refreshClick = () => {
     if (checkRepo()) {
-        repoInfoStore.reFreshBranch()
+        repoInfoStore.reFreshBranch();
     }
-}
+};
 
 // 时间树
 const appTreeClick = () => {
     if (checkRepo()) {
-        treeDialogVisible.value = true
+        treeDialogVisible.value = true;
     }
-}
+};
 
 // 程序下载
 const appDownloadClick = () => {
     if (checkRepo()) {
-        downDialogVisible.value = true
+        downDialogVisible.value = true;
     }
-}
+};
 
 // 弹窗程序
 const appCompileClick = (row) => {
-    versionInfoStore.rowData = row
-    appDialogVisible.value = true
-}
+    versionInfoStore.rowData = row;
+    appDialogVisible.value = true;
+};
 
 // 查看版本信息
 const viewInfoClick = (row) => {
-    versionDialogType.value = 1
-    id.value = row.id
-    versionInfoStore.rowData = row
+    versionDialogType.value = 1;
+    id.value = row.id;
+    versionInfoStore.rowData = row;
 
-    versionTitle.value = '版本信息'
-    versionDialogVisible.value = true
-}
-
-
+    versionTitle.value = "版本信息";
+    versionDialogVisible.value = true;
+};
 </script>
 
 <style scoped>
@@ -277,10 +286,10 @@ const viewInfoClick = (row) => {
 
 .board-box {
     display: inline-block;
-    background: #007AFF;
+    background: #007aff;
     width: 5px;
     height: 32px;
-    color: #007AFF;
+    color: #007aff;
 }
 
 .pagination-box {
